@@ -2,11 +2,12 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 00:16:00
+ * @LastEditTime: 2025-10-28 00:41:20
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
 #include <snailix/types.h>
+#include <snailix/string.h>
 
 void kernel_main(u32 size, u32 size_high)
 {
