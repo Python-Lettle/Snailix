@@ -41,7 +41,8 @@ QEMU_DISK := -boot c \
 QEMU_DEBUG := -s -S
 
 # Kernel objects
-KERNEL_OBJS = 
+KERNEL_OBJS = $(BUILD)/kernel/start.o\
+			$(BUILD)/kernel/main.o \
 	
 
 #===========================================================
@@ -69,6 +70,16 @@ bochs: $(BUILD)/$(KERNEL_NAME).img
 #===========================================================
 # Build rules
 #===========================================================
+$(BUILD)/raw.bin: $(KERNEL_OBJS)
+	$(shell mkdir -p $(dir $@))
+	$(LD) $(LDFLAGS) -static $(KERNEL_OBJS) -o $(BUILD)/raw.bin
+
+$(BUILD)/$(KERNEL_NAME).bin: $(BUILD)/raw.bin
+	$(OBJCOPY) -O binary $< $@
+
+$(BUILD)/$(KERNEL_NAME).map: $(BUILD)/raw.bin
+	nm $< | sort > $@
+
 $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
@@ -81,7 +92,8 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	$(CC) $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
-$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin
+$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin $(BUILD)/$(KERNEL_NAME).bin
 	@dd if=/dev/zero of=$@ bs=1M count=16
 	@dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
 	@dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
+	@dd if=$(BUILD)/$(KERNEL_NAME).bin of=$@ bs=512 count=200 seek=10 conv=notrunc
