@@ -5,6 +5,7 @@
 
 #include <snailix/stdarg.h>
 #include <snailix/string.h>
+#include <snailix/assert.h>
 
 #define ZEROPAD 0x01 // Pad with zeros
 #define SIGN 0x02    // unsigned/signed long
