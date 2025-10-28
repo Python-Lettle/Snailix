@@ -1,17 +1,24 @@
-/*
- * @Author: Lettle 1071445082@qq.com
- * @Date: 2025-10-28 00:12:03
+<!--
+ * @Author: Lettle && 1071445082@qq.com
+ * @Date: 2025-10-24 00:19:21
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 23:41:08
+ * @LastEditTime: 2025-10-28 23:43:57
  * @Copyright: MIT License
- * @Description: Kernel main function
- */
-#include <snailix/types.h>
-#include <snailix/string.h>
-#include <snailix/printk.h>
-#include <snailix/assert.h>
-#include <snailix/list.h>
+ * @Description: 
+-->
+# List
 
+## Introduction
+
+This is a simple implementation of a linked list in C. It provides functions to initialize a linked list, add nodes to the front or back, remove nodes from the front or back, get the size of the list, and get a node by index.
+
+In this implementation, I tried to use C to mimic Java-style naming conventions and object-oriented programming as much as possible, and the functions provided by linked lists were modeled after Java specifications.
+
+## Test
+
+If you want to test the list, you can paste the following code into main.c :
+
+```c
 extern void screen_init();
 extern void memory_init(u32 memsize_low, u32 memsize_high);
 extern void screen_print(char *buf, u32 count);
@@ -63,3 +70,4 @@ void kernel_main(u32 size, u32 size_high)
 
     while(1) ;
 }
+```
