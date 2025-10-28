@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 00:25:37
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 14:29:52
+ * @LastEditTime: 2025-10-28 22:37:34
  * @Copyright: MIT License
  * @Description:
  *      This file is responsible for writing the output to the screen, 
@@ -205,4 +205,12 @@ void screen_init()
     set_cursor();
     // 3. Clear the screen.
     screen_clear();
+    // 4. Print the logo on the screen.
+    for(u32 i=0; i<LOGO_LINE; i++)
+    {
+        screen_print(logo[i], strlen(logo[i]));
+        command_lf();
+        command_cr();
+    }
+    screen_print("--------------------------------------------------------------------------------\n", 81);
 }
