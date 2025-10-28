@@ -46,6 +46,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/kernel/asmfuncs.o \
 			$(BUILD)/kernel/screen.o \
 			$(BUILD)/lib/string.o \
+			$(BUILD)/lib/vsprintf.o \
 	
 
 #===========================================================
