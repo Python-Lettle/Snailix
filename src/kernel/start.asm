@@ -27,18 +27,18 @@ _start:
     push eax            ; Total size of the memory
     call kernel_main
 halt:
-    mov byte [0xb80a0], 'E'
-    mov byte [0xb80a1], 0x0f
-    mov byte [0xb80a2], 'r'
-    mov byte [0xb80a3], 0x0f
-    mov byte [0xb80a4], 'r'
-    mov byte [0xb80a5], 0x0f
-    mov byte [0xb80a6], 'o'
-    mov byte [0xb80a7], 0x0f
-    mov byte [0xb80a8], 'r'
-    mov byte [0xb80a9], 0x0f
-    mov byte [0xb80aa], '!'
-    mov byte [0xb80ab], 0x0f
+    mov byte [0xb8094], 'H'
+    mov byte [0xb8095], 0x0f
+    mov byte [0xb8096], 'a'
+    mov byte [0xb8097], 0x0f
+    mov byte [0xb8098], 'l'
+    mov byte [0xb8099], 0x0f
+    mov byte [0xb809a], 't'
+    mov byte [0xb809b], 0x0f
+    mov byte [0xb809c], '!'
+    mov byte [0xb809d], 0x0f
+    mov byte [0xb809e], '!'
+    mov byte [0xb809f], 0x0f
     hlt
     jmp $
 
