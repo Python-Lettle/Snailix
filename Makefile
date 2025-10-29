@@ -48,6 +48,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/kernel/printk.o \
 			$(BUILD)/kernel/assert.o \
 			$(BUILD)/kernel/memory.o \
+			$(BUILD)/kernel/global.o \
 			$(BUILD)/lib/string.o \
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \
