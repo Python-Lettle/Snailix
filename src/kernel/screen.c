@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 00:25:37
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 22:37:34
+ * @LastEditTime: 2025-10-29 14:25:46
  * @Copyright: MIT License
  * @Description:
  *      This file is responsible for writing the output to the screen, 
@@ -10,6 +10,7 @@
  */
 #include <snailix/asmfuncs.h>
 #include <snailix/screen.h>
+#include <snailix/string.h>
 
 // ==================================================
 // Static variables
@@ -32,7 +33,9 @@ static char *logo[LOGO_LINE] =
 
 // The video memory address, the next print position.
 static u32 screen;                  // Address of the next print position in the video memory.
-static u32 screen_x, screen_y;      // Screen next print position -> (x, y)
+// Screen next print position -> (x, y)
+// x in [0, 79], y in [0, 24]
+static u32 screen_x, screen_y;
 
 static u8 char_attr = 7; // Character attribute
 
@@ -55,8 +58,9 @@ static void calculate_screen()
 
 static void get_screen_position()
 {
-    screen_x = screen % ROW_SIZE;
-    screen_y = screen / ROW_SIZE;
+    u32 relative_pos = screen - SCREEN_MEM_BASE;
+    screen_x = relative_pos % ROW_SIZE / 2;
+    screen_y = relative_pos / ROW_SIZE;
 }
 
 // Clean the screen by set all the video memory to ' ' character.
@@ -73,28 +77,24 @@ static void scroll_up()
 {
     // If the screen is full, scroll up all the video memory area.
     // The first line will be erased.
-    if (screen_x >= WIDTH - 1)
+    if (screen_y >= HEIGHT - 1)
     {
         // Move the area from the 2nd row to the end up one row.
         memcpy((void *)SCREEN_MEM_BASE, (void *)(SCREEN_MEM_BASE + ROW_SIZE), SCR_SIZE - ROW_SIZE);
-        screen = SCREEN_MEM_BASE + (HEIGHT - 2) * ROW_SIZE;
-        screen_y = HEIGHT - 2;
-
-        // Clear the last line.
-        u32 *ptr = (u32 *)(screen + ROW_SIZE * (HEIGHT - 1));
-        for (size_t i = 0; i < WIDTH; i++)
-        {
-            *ptr++ = ERASE_CHAR;
-        }
+        screen = SCREEN_MEM_END - ROW_SIZE;
     }
 
-    // Set the cursor at the beginning of the last row of the screen.
-    screen += ROW_SIZE;
-    screen_x = 0;
-    screen_y += 1;
+    u32 *ptr = (u32 *)(screen);
+    for (size_t i=0; i<WIDTH; i++)
+    {
+        *ptr++ = ERASE_CHAR;
+    }
+    get_screen_position();
     set_cursor();
 }
 
+
+// move the cursor to the next line.
 static void command_lf()
 {
     // If the cursor is not at the last line.
@@ -108,6 +108,7 @@ static void command_lf()
 }
 
 // carriage return '\r'
+// move the cursor to the beginning of the current line. (x = 0)
 static void command_cr()
 {
     screen -= (screen_x << 1);

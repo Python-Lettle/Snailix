@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 12:52:45
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 13:25:16
+ * @LastEditTime: 2025-10-29 14:23:28
  * @Copyright: MIT License
  * @Description:
  */
@@ -19,7 +19,7 @@
 
 // Constants of the screen
 #define SCREEN_MEM_BASE 0xB8000     // The starting position of video memory
-#define SCREEN_MEM_SIZE 0x4000      // The size of video memory
+#define SCREEN_MEM_SIZE 4000        // The size of video memory (page 0)
 #define SCREEN_MEM_END (SCREEN_MEM_BASE + SCREEN_MEM_SIZE) // The end of video memory
 #define WIDTH 80                      // Width of the screen
 #define HEIGHT 25                     // Height of the screen
@@ -38,7 +38,7 @@
 #define ASCII_FF 0x0C  // \f
 #define ASCII_CR 0x0D  // \r
 #define ASCII_DEL 0x7F
-#define ERASE_CHAR 0x0720 // \a + ' '
+#define ERASE_CHAR 0x0720
 
 
 #endif // SNAILIX_SCREEN_H
