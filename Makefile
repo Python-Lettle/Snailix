@@ -19,6 +19,7 @@ CFLAGS += -fno-pic 		# No position-independent code
 CFLAGS += -fno-pie		# No position-independent executable
 CFLAGS += -nostdlib		# No standard library
 CFLAGS += -fno-stack-protector	# No stack protect
+CFLAGS += -Wno-incompatible-pointer-types
 CFLAGS := $(strip ${CFLAGS})
 
 DEBUG = -g
@@ -49,6 +50,9 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/kernel/assert.o \
 			$(BUILD)/kernel/memory.o \
 			$(BUILD)/kernel/global.o \
+			$(BUILD)/kernel/task.o \
+			$(BUILD)/kernel/thread.o \
+			$(BUILD)/kernel/schedule.o \
 			$(BUILD)/lib/string.o \
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \
