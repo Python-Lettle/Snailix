@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-23 09:54:33
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 23:37:20
+ * @LastEditTime: 2025-10-30 23:58:10
  * @Copyright: MIT License
  * @Description: A linked list structure is defined.
  */
@@ -38,7 +38,7 @@ void list_insert_before(LinkedNode *anchor, LinkedNode *node);
 // Insert node after anchor
 void list_insert_after(LinkedNode *anchor, LinkedNode *node);
 
-// Insert node to HEAD
+// Insert node after HEAD
 void list_lpush(LinkedList *list, LinkedNode *node);
 
 // The node after the HEAD node will be removed

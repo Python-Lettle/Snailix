@@ -7,7 +7,7 @@ BUILD = ./build
 SRC   = ./src
 
 # Kernel name, used for the build output
-KERNEL_NAME = Snalix
+KERNEL_NAME = Snailix
 
 ENTRYPOINT = 0x10000
 
@@ -52,6 +52,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/lib/string.o \
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \
+			$(BUILD)/lib/bitmap.o \
 	
 
 #===========================================================
