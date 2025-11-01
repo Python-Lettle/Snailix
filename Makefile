@@ -59,6 +59,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \
 			$(BUILD)/lib/bitmap.o \
+			$(BUILD)/lib/stdlib.o \
 	
 
 #===========================================================
