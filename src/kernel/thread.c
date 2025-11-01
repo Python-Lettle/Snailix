@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 13:11:49
+ * @LastEditTime: 2025-11-01 13:15:10
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -28,7 +28,7 @@ void idle_thread()
 void init_thread()
 {
     // set_interrupt_state(true);
-    char temp[100]; // 为栈顶有足够的空间
+    char temp[100];
     bool finish = false;
     while(true)
     {
