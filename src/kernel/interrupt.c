@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 13:18:32
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 13:46:10
+ * @LastEditTime: 2025-11-01 14:09:24
  * @Copyright: MIT License
  * @Description: 
  */
@@ -64,15 +64,20 @@ void send_eoi(int vector)
     }
 }
 
-u32 counter = 0;
 
+extern void schedule();
 void default_handler(int vector)
 {
     send_eoi(vector);
-    kernel_info("[%d] default interrupt called %d...\n", vector, counter++);
+    schedule();
 }
 
-void exception_handler(int vector)
+void exception_handler(
+    int vector,
+    u32 edi, u32 esi, u32 ebp, u32 esp,
+    u32 ebx, u32 edx, u32 ecx, u32 eax,
+    u32 gs, u32 fs, u32 es, u32 ds,
+    u32 vector0, u32 error, u32 eip, u32 cs, u32 eflags)
 {
     char *message = NULL;
     if (vector < 22)
@@ -84,7 +89,14 @@ void exception_handler(int vector)
         message = messages[15];
     }
 
-    kernel_info(" Exception : [0x%02X] %s \n", vector, messages[vector]);
+    kernel_info("EXCEPTION : %s \n", messages[vector]);
+    kernel_info("   VECTOR : 0x%02X\n", vector);
+    kernel_info("    ERROR : 0x%08X\n", error);
+    kernel_info("   EFLAGS : 0x%08X\n", eflags);
+    kernel_info("       CS : 0x%02X\n", cs);
+    kernel_info("      EIP : 0x%08X\n", eip);
+    kernel_info("      ESP : 0x%08X\n", esp);
+    
     // 阻塞
     halt();
 }

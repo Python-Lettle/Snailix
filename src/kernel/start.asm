@@ -26,6 +26,9 @@ _start:
     push edx            ; High 8 bit of the total size
     push eax            ; Total size of the memory
     call kernel_main
+
+    int 0x80
+
 global halt
 halt:
     mov byte [0xb8094], 'H'

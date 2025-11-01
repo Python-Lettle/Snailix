@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 13:15:10
+ * @LastEditTime: 2025-11-01 14:12:51
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -11,8 +11,9 @@
 
 extern void schedule();
 
-void idle_thread()
+void _ofp idle_thread()
 {
+    asm volatile("sti\n");
     u32 counter = 1;
     while(true)
     {
@@ -25,9 +26,10 @@ void idle_thread()
     }
 }
 
-void init_thread()
+void _ofp init_thread()
 {
-    // set_interrupt_state(true);
+    asm volatile("sti\n");
+
     char temp[100];
     bool finish = false;
     while(true)

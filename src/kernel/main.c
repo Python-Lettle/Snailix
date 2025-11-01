@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 14:03:49
+ * @LastEditTime: 2025-11-01 14:10:37
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -28,6 +28,5 @@ void kernel_main(u32 size, u32 size_high)
 
     // asm volatile("sti\n");
     
-    // task_init();
-    while (true);
+    task_init();
 }
