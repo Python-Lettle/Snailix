@@ -27,8 +27,6 @@ _start:
     push eax            ; Total size of the memory
     call kernel_main
 
-    int 0x80
-
 global halt
 halt:
     mov byte [0xb8094], 'H'

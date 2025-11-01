@@ -42,7 +42,7 @@ QEMU_DISK := -boot c \
 QEMU_DEBUG := -s -S
 
 # Kernel objects
-KERNEL_OBJS = $(BUILD)/kernel/start.o\
+KERNEL_OBJS = $(BUILD)/kernel/start.o \
 			$(BUILD)/kernel/main.o \
 			$(BUILD)/kernel/asmfuncs.o \
 			$(BUILD)/kernel/screen.o \
@@ -55,6 +55,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o\
 			$(BUILD)/kernel/schedule.o \
 			$(BUILD)/kernel/interrupt.o \
 			$(BUILD)/kernel/handler.o \
+			$(BUILD)/kernel/clock.o \
 			$(BUILD)/lib/string.o \
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \

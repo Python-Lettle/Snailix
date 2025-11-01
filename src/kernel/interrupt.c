@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 13:18:32
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 14:09:24
+ * @LastEditTime: 2025-11-01 15:51:05
  * @Copyright: MIT License
  * @Description: 
  */
@@ -10,8 +10,9 @@
 #include <snailix/global.h>
 #include <snailix/printk.h>
 #include <snailix/asmfuncs.h>
+#include <snailix/assert.h>
 
-#define ENTRY_SIZE 0x20
+#define ENTRY_SIZE 0x30
 
 #define PIC_M_CTRL 0x20 // Master PIC Control Port
 #define PIC_M_DATA 0x21 // Master PIC Data Port
@@ -64,12 +65,72 @@ void send_eoi(int vector)
     }
 }
 
+void set_interrupt_handler(u32 irq, handler_t handler)
+{
+    assert(irq >= 0 && irq < 16);
+    handler_table[IRQ_MASTER_NR + irq] = handler;
+}
 
-extern void schedule();
+void set_interrupt_mask(u32 irq, bool enable)
+{
+    assert(irq >= 0 && irq < 16);
+    u16 port;
+    if (irq < 8)
+    {
+        port = PIC_M_DATA;
+    }
+    else
+    {
+        port = PIC_S_DATA;
+        irq -= 8;
+    }
+    if (enable)
+    {
+        outb(port, inb(port) & ~(1 << irq));
+    }
+    else
+    {
+        outb(port, inb(port) | (1 << irq));
+    }
+}
+
+// Clear IF bit and return the previous value
+bool interrupt_disable()
+{
+    asm volatile(
+        "pushfl\n"        // Push current eflags to stack
+        "cli\n"           // Clear IF bit, external interrupts are now masked
+        "popl %eax\n"     // Pop previously pushed eflags to eax
+        "shrl $9, %eax\n" // Shift eax right by 9 bits to get IF bit
+        "andl $1, %eax\n" // Keep only IF bit
+    );
+}
+
+// Get IF bit
+bool get_interrupt_state()
+{
+    asm volatile(
+        "pushfl\n"        // Push current eflags to stack
+        "popl %eax\n"     // Pop pushed eflags to eax
+        "shrl $9, %eax\n" // Shift eax right by 9 bits to get IF bit
+        "andl $1, %eax\n" // Keep only IF bit
+    );
+}
+
+// Set IF bit
+void set_interrupt_state(bool state)
+{
+    if (state)
+        asm volatile("sti\n");
+    else
+        asm volatile("cli\n");
+}
+
+
 void default_handler(int vector)
 {
     send_eoi(vector);
-    schedule();
+    kernel_info("Default handler called for vector %d\n", vector);
 }
 
 void exception_handler(
@@ -97,7 +158,7 @@ void exception_handler(
     kernel_info("      EIP : 0x%08X\n", eip);
     kernel_info("      ESP : 0x%08X\n", esp);
     
-    // 阻塞
+    // Halt the kernel
     halt();
 }
 
