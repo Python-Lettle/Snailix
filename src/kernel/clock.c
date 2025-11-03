@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 15:13:41
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 15:48:35
+ * @LastEditTime: 2025-11-01 16:42:41
  * @Copyright: MIT License
  * @Description: 
  */
@@ -34,7 +34,7 @@ void clock_handler(int vector)
 
     jiffies++;
 
-    kernel_info("jiffies: %d\n", jiffies);
+    // kernel_info("jiffies: %d\n", jiffies);
 }
 
 void pit_init()

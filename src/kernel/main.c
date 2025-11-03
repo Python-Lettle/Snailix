@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 15:46:34
+ * @LastEditTime: 2025-11-01 16:42:05
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -17,6 +17,7 @@ extern void gdt_init();
 extern void interrupt_init();
 extern void task_init();
 extern void clock_init();
+extern void time_init();
 
 extern void screen_print(char *buf, u32 count);
 
@@ -26,10 +27,9 @@ void kernel_main(u32 size, u32 size_high)
     gdt_init();
     memory_init(size, size_high);
     interrupt_init();
-    
-    // task_init();
 
     clock_init();
+    time_init();
 
     asm volatile("sti");
     
