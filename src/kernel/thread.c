@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 14:12:51
+ * @LastEditTime: 2025-11-03 13:37:01
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -17,7 +17,7 @@ void _ofp idle_thread()
     u32 counter = 1;
     while(true)
     {
-        kernel_info("Idle thread runned %d times\n", counter++);
+        // kernel_info("Idle thread runned %d times\n", counter++);
         
         // some delay
         for (u32 i=0; i<100000000; i++) {}

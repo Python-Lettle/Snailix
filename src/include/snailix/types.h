@@ -2,12 +2,14 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 00:13:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 00:13:32
+ * @LastEditTime: 2025-11-03 13:47:23
  * @Copyright: MIT License
  * @Description: 
  */
 #ifndef SNAILIX_TYPES_H
 #define SNAILIX_TYPES_H
+
+#include <snailix/snailix.h>
 
 #define EOF  -1          // end of file
 #define NULL ((void *)0) // null pointer

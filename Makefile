@@ -33,7 +33,7 @@ LDFLAGS := $(strip ${LDFLAGS})
 
 # QEMU params
 QEMU := qemu-system-i386 \
-	-m 32M \
+	-m 4096M \
 	-rtc base=localtime \
 
 QEMU_DISK := -boot c \

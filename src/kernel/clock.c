@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 15:13:41
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 16:42:41
+ * @LastEditTime: 2025-11-03 13:36:40
  * @Copyright: MIT License
  * @Description: 
  */
@@ -12,6 +12,7 @@
 #include <snailix/task.h>
 #include <snailix/snailix.h>
 #include <snailix/printk.h>
+#include <snailix/snailix.h>
 
 
 #define PIT_CHAN0_REG 0X40
@@ -34,7 +35,16 @@ void clock_handler(int vector)
 
     jiffies++;
 
-    // kernel_info("jiffies: %d\n", jiffies);
+    task_t *task = running_task();
+    if (task->magic == SNAILIX_MAGIC)
+    {
+        task->jiffies = jiffies;
+        task->ticks--;
+        if (!task->ticks)
+        {
+            schedule();
+        }
+    }
 }
 
 void pit_init()
