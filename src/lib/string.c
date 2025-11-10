@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:40:24
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 00:40:24
+ * @LastEditTime: 2025-11-10 13:54:11
  * @Copyright: MIT License
  * @Description: Functions for string or memory manipulation.
  */
@@ -14,9 +14,11 @@ char * strcpy(char * dest, const char * src)
     while(true)
     {
         *ptr++ = *src++;
-        if(*src == EOS)
+        if(*src == EOS) {
+            *ptr = EOS;
             return dest;
-    }
+        }
+    }        
 }
 
 char * strcat(char * dest, const char * src)
