@@ -16,7 +16,7 @@ interrupt_handler_%1:
 %ifn %2
     push 0x22CAFE33
 %endif
-    push %1; 压入中断向量，跳转到中断入口
+    push %1; Push the interrupt vector and jump to the interrupt entry
     jmp interrupt_entry
 %endmacro
 
@@ -166,40 +166,40 @@ handler_entry_table:
 
 section .text
 
-; extern syscall_check
-; extern syscall_table
-; global syscall_handler
-; syscall_handler:
-;     ; Verify the system call number
-;     push eax
-;     call syscall_check
-;     add esp, 4
+extern syscall_check
+extern syscall_table
+global syscall_handler
+syscall_handler:
+    ; Verify the system call number
+    push eax
+    call syscall_check
+    add esp, 4
 
-;     push 0x20220205
+    push 0x20220205
 
-;     push 0x80
+    push 0x80
 
-;     ; Save the above register information
-;     push ds
-;     push es
-;     push fs
-;     push gs
-;     pusha
+    ; Save the above register information
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
 
-;     ; Pass the parameter interrupt vector vector to the interrupt handling function
-;     push 0x80
+    ; Pass the parameter interrupt vector vector to the interrupt handling function
+    push 0x80
 
-;     push edx; Third param
-;     push ecx; Second param
-;     push ebx; First param
+    push edx; Third param
+    push ecx; Second param
+    push ebx; First param
 
-;     ; The system call handler is invoked, and a pointer to the system call handler is stored in syscall_table.
-;     call [syscall_table + eax * 4]
-;     ; Recovery stack
-;     add esp, 12
+    ; The system call handler is invoked, and a pointer to the system call handler is stored in syscall_table.
+    call [syscall_table + eax * 4]
+    ; Recovery stack
+    add esp, 12
 
-;     ; The eax register in the stack is modified to set the system call return value.
-;     mov dword [esp + 8 * 4], eax
+    ; The eax register in the stack is modified to set the system call return value.
+    mov dword [esp + 8 * 4], eax
 
-;     ; Jump to the interrupt exit function
-;     jmp interrupt_exit
+    ; Jump to the interrupt exit function
+    jmp interrupt_exit

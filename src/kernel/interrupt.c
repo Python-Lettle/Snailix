@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 13:18:32
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 15:51:05
+ * @LastEditTime: 2025-11-10 09:57:52
  * @Copyright: MIT License
  * @Description: 
  */
@@ -25,6 +25,7 @@ pointer_t idt_ptr;
 
 handler_t handler_table[IDT_SIZE];
 extern handler_t handler_entry_table[ENTRY_SIZE];
+extern void syscall_handler();
 
 static char *messages[] = {
     "#DE Divide Error\0",
@@ -202,6 +203,17 @@ void idt_init()
     {
         handler_table[i] = exception_handler;
     }
+
+    // Initialize system call
+    gate_t *gate = &idt[0x80];
+    gate->offset0 = (u32)syscall_handler & 0xffff;
+    gate->offset1 = ((u32)syscall_handler >> 16) & 0xffff;
+    gate->selector = 1 << 3; // Code segment
+    gate->reserved = 0;      // Reserved
+    gate->type = 0b1110;     // Interrupt gate
+    gate->segment = 0;       // System segment
+    gate->DPL = 3;           // User mode
+    gate->present = 1;       // Present
 
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;

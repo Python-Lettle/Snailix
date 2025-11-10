@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:10:18
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-01 15:49:53
+ * @LastEditTime: 2025-11-10 13:41:27
  * @Copyright: MIT License
  * @Description: 
  */
@@ -57,5 +57,7 @@ typedef struct task_frame_t
 
 task_t *running_task();
 void schedule();
+
+void task_yield();
 
 #endif //SNAILIX_TASK_H

@@ -58,11 +58,13 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o \
 			$(BUILD)/kernel/clock.o \
 			$(BUILD)/kernel/time.o \
 			$(BUILD)/kernel/keyboard.o \
+			$(BUILD)/kernel/gate.o \
 			$(BUILD)/lib/string.o \
 			$(BUILD)/lib/vsprintf.o \
 			$(BUILD)/lib/list.o \
 			$(BUILD)/lib/bitmap.o \
 			$(BUILD)/lib/stdlib.o \
+			$(BUILD)/lib/syscall.o \
 	
 
 #===========================================================

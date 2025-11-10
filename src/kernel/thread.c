@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-03 13:37:01
+ * @LastEditTime: 2025-11-10 13:55:19
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -21,8 +21,6 @@ void _ofp idle_thread()
         
         // some delay
         for (u32 i=0; i<100000000; i++) {}
-
-        schedule();
     }
 }
 
@@ -39,6 +37,5 @@ void _ofp init_thread()
             kernel_info("Init thread's task is finish!\n");
             finish = true;
         }
-        schedule();
     }
 }

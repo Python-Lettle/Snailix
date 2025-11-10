@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-03 17:40:26
+ * @LastEditTime: 2025-11-10 13:46:17
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -20,6 +20,7 @@ extern void task_init();
 extern void clock_init();
 extern void time_init();
 extern void keyboard_init();
+extern void syscall_init();
 
 extern void screen_print(char *buf, u32 count);
 
@@ -36,8 +37,9 @@ void kernel_main(u32 size, u32 size_high)
 
     keyboard_init();
 
-    // task_init();
+    task_init();
 
+    syscall_init();
     
 
 }
