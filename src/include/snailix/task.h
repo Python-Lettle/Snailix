@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:10:18
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 13:41:27
+ * @LastEditTime: 2025-11-10 19:46:07
  * @Copyright: MIT License
  * @Description: 
  */
@@ -10,6 +10,7 @@
 #define SNAILIX_TASK_H
 
 #include <snailix/types.h>
+#include <snailix/list.h>
 
 #define KERNEL_USER 0
 #define NORMAL_USER 1
@@ -33,6 +34,7 @@ typedef enum task_state_t
 typedef struct task_t
 {
     u32 *stack;              // Kernel stack
+    LinkedNode block_node;   // Blocked list node (for kernel blocked list)
     task_state_t state;      // Task state
     u32 priority;            // Task priority
     u32 ticks;               // Remaining time slices
@@ -59,5 +61,7 @@ task_t *running_task();
 void schedule();
 
 void task_yield();
+void task_block(task_t *task, LinkedList *blist, task_state_t state);
+void task_unblock(task_t *task);
 
 #endif //SNAILIX_TASK_H

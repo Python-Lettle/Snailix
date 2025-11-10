@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 13:46:17
+ * @LastEditTime: 2025-11-10 19:59:18
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -10,6 +10,7 @@
 #include <snailix/string.h>
 #include <snailix/printk.h>
 #include <snailix/assert.h>
+#include <snailix/interrupt.h>
 
 extern void screen_init();
 extern void memory_init(u32 memsize_low, u32 memsize_high);
@@ -41,5 +42,5 @@ void kernel_main(u32 size, u32 size_high)
 
     syscall_init();
     
-
+    set_interrupt_state(true);
 }

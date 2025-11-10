@@ -1,11 +1,3 @@
-<!--
- * @Author: Lettle && 1071445082@qq.com
- * @Date: 2025-10-25 22:52:42
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 14:32:16
- * @Copyright: MIT License
- * @Description: 
--->
 # Snailix
 
 ## Abstract
@@ -19,6 +11,36 @@ $ make run
 ```
 
 ## Features
+
+
+
+### Basic
+
+- [x] Boot & Loader
+- [x] Screen (80x25 text mode)
+- [x] Interrupt
+- [x] System call
+- [x] Clock
+- [x] Time
+- [ ] Memory Manage
+- [ ] Process
+
+-   [x] Thread
+-   [x] Keyboard
+
+### Major functions
+
+-   [ ] Command line
+
+
+
+### Lib
+
+-   [x] Linked List
+-   [x] Bitmap
+-   [x] String
+
+
 
 
 ## Logo

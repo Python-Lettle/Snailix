@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 15:13:41
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 13:58:36
+ * @LastEditTime: 2025-11-10 19:57:57
  * @Copyright: MIT License
  * @Description: 
  */
@@ -40,6 +40,7 @@ void clock_handler(int vector)
     {
         task->jiffies = jiffies;
         task->ticks--;
+        // kernel_info("Task %s ticks remaining: %d\n", task->name, task->ticks);
         if (!task->ticks)
         {
             schedule();
