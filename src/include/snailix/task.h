@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:10:18
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 19:46:07
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 14:02:44
  * @Copyright: MIT License
  * @Description: 
  */
@@ -17,7 +17,7 @@
 
 #define TASK_NAME_LEN 16
 
-typedef u32 target_t();
+typedef void target_t();
 
 typedef enum task_state_t
 {
@@ -63,5 +63,8 @@ void schedule();
 void task_yield();
 void task_block(task_t *task, LinkedList *blist, task_state_t state);
 void task_unblock(task_t *task);
+
+void task_sleep(u32 ms);
+void task_wakeup();
 
 #endif //SNAILIX_TASK_H

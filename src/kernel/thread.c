@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 13:36:04
+ * @LastEditTime: 2025-11-13 14:44:08
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -23,7 +23,17 @@ void _ofp idle_thread()
             "hlt\n" // Halt the CPU, waiting for an external interrupt
         );
         // Let other threads run.
-        yield();
+        // yield();
+    }
+}
+
+void _ofp sleep_thread()
+{
+    set_interrupt_state(true);
+    while(true)
+    {
+        kernel_info("Sleep thread is running!\n");
+        sleep(1000);
     }
 }
 
@@ -38,5 +48,6 @@ void _ofp init_thread()
             kernel_info("Init thread's task is finish!\n");
             finish = true;
         }
+        sleep(500);
     }
 }

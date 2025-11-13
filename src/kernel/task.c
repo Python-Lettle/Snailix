@@ -2,10 +2,11 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 13:41:40
+ * @LastEditTime: 2025-11-13 14:42:51
  * @Copyright: MIT License
  * @Description: 
  */
+#include <snailix/assert.h>
 #include <snailix/task.h>
 #include <snailix/debug.h>
 #include <snailix/printk.h>
@@ -16,6 +17,8 @@
 #include <snailix/memory.h>
 
 #define NR_TASKS  64
+extern u32 volatile jiffies;
+extern u32 jiffy;
 
 extern void task_switch(task_t *next);
 
@@ -24,11 +27,23 @@ static u32 running_index = 0;
 static u32 task_count = 0;
 static task_t *task_table[NR_TASKS];
 static LinkedList block_list;           // Default blocked list
-// Idle task, it may do some initialization.
-// TODO: Temporarily allocate some memory.
-static task_t *init_task = (task_t *)0x1000;
-// Idle task, do nothing.
-static task_t *idle_task = (task_t *)0x2000;
+static LinkedList sleep_list;           // Default sleep list
+// Idle task, do nothing. When task_search returns NULL, it will be scheduled.
+static task_t *idle_task;
+
+// Get a free task from the task table.
+static task_t *get_free_task()
+{
+    for (size_t i = 0; i < NR_TASKS; i++)
+    {
+        if (task_table[i] == NULL)
+        {
+            task_table[i] = (task_t *)alloc_kpage(1); // todo free_kpage
+            return task_table[i];
+        }
+    }
+    panic("No more tasks");
+}
 
 // Search for a task with the specified state, except the current running task.
 static task_t *task_search(task_state_t state)
@@ -56,6 +71,10 @@ static task_t *task_search(task_state_t state)
             task = ptr;
     }
 
+    // If no task found, return idle task.
+    if (task == NULL)
+        task = idle_task;
+
     return task;
 }
 
@@ -80,18 +99,21 @@ void schedule()
     // Find next ready task, round-robin scheduling.
     task_t *next = task_search(TASK_READY);
 
-    assert(next != NULL && next->state == TASK_READY && next->magic == SNAILIX_MAGIC);
+    assert(next != NULL);
 
     next->ticks = 150;
     next->state = TASK_RUNNING;
-    if (current != next)
-        current->state = current->state == TASK_BLOCKED ? TASK_BLOCKED : TASK_READY;
+    if (current->state == TASK_RUNNING)
+    {
+        current->state = TASK_READY;
+    }
     printk("[Schedule] Switch task [%s]-> [%s]\n", current->name, next->name);
     task_switch(next);
 }
 
-static task_t *task_create(task_t *task, const char * name, u32 priority, u32 uid, target_t target)
+static task_t *task_create(target_t target, const char * name, u32 priority, u32 uid)
 {    
+    task_t *task = get_free_task();
     u32 stack = (u32)task + PAGE_SIZE;
 
     stack -= sizeof(task_frame_t);
@@ -103,6 +125,9 @@ static task_t *task_create(task_t *task, const char * name, u32 priority, u32 ui
     frame->eip = (void *)target;
 
     task->stack = (u32 *)stack;
+
+    node_init(&task->block_node, task);
+
     task->state = TASK_READY;
     task->priority = priority;
     task->ticks = 150;
@@ -164,6 +189,68 @@ void task_unblock(task_t *task)
     if (current == task) schedule();
 }
 
+void task_sleep(u32 ms)
+{
+    // Make sure interrupts are disabled
+    assert(!get_interrupt_state());
+
+    u32 ticks = ms / jiffy;        // Number of ticks to sleep
+    ticks = ticks > 0 ? ticks : 1; // Sleep at least one tick
+
+    // Record target global tick when the task should be woken up
+    task_t *current = running_task();
+    current->ticks = jiffies + ticks;
+
+    // Find the first task in the sleep list whose wakeup tick is later than current task's, for insert-sort
+    LinkedList *list = &sleep_list;
+    LinkedNode *anchor = &list->tail;
+
+    for (LinkedNode *ptr = list->head.next; ptr != &list->tail; ptr = ptr->next)
+    {
+        task_t *task = ptr->data;
+
+        if (task->ticks > current->ticks)
+        {
+            anchor = ptr;
+            break;
+        }
+    }
+
+    assert(current->block_node.next == NULL);
+    assert(current->block_node.prev == NULL);
+
+    // Insert into the list
+    list_insert_before(anchor, &current->block_node);
+
+    // Block state is sleeping
+    current->state = TASK_SLEEPING;
+
+    // Schedule another task to run
+    schedule();
+}
+
+void task_wakeup()
+{
+    assert(!get_interrupt_state()); // Must not be interruptible
+
+    // Find tasks in the sleep list whose ticks are less than or equal to jiffies and resume them
+    LinkedList *list = &sleep_list;
+    for (LinkedNode *ptr = list->head.next; ptr != &list->tail;)
+    {
+        task_t *task = ptr->data;
+        if (task->ticks > jiffies)
+        {
+            break;
+        }
+
+        // task_unblock will clear the pointer
+        ptr = ptr->next;
+
+        task->ticks = 0;
+        task_unblock(task);
+    }
+}
+
 /**
  * @brief Yield the current running task.
  */
@@ -174,17 +261,16 @@ void task_yield()
 
 extern void idle_thread();
 extern void init_thread();
-extern void self_block_thread();
+extern void sleep_thread();
 
 void task_init()
 {
     list_init(&block_list);
+    list_init(&sleep_list);
 
-    task_create(init_task, "init_task", 1, KERNEL_USER, init_thread);
-    task_create(idle_task, "idle_task", 5, KERNEL_USER, idle_thread);
-
-    task_table[0] = init_task;
-    task_table[1] = idle_task;
+    task_create(init_thread, "init_task", 1, KERNEL_USER);
+    idle_task = task_create(idle_thread, "idle_task", 5, KERNEL_USER);
+    task_create(sleep_thread, "sleep_task", 5, KERNEL_USER);
 
     schedule();
 }

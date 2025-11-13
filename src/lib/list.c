@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-23 13:21:16
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-28 23:37:06
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 14:26:18
  * @Copyright: MIT License
  * @Description: Implementation of linked list operations.
  */
@@ -13,6 +13,9 @@
  */
 void node_init(LinkedNode *node, void *data)
 {
+    assert(node != NULL);
+    node->prev = NULL;
+    node->next = NULL;
     node->data = data;
 }
 

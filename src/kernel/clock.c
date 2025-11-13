@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 15:13:41
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 19:57:57
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 14:04:06
  * @Copyright: MIT License
  * @Description: 
  */
@@ -28,10 +28,14 @@
 u32 volatile jiffies = 0;
 u32 jiffy = JIFFY;
 
+extern void task_wakeup();
+
 void clock_handler(int vector)
 {
     assert(vector == 0x20);
     send_eoi(vector);
+
+    task_wakeup();
 
     jiffies++;
 

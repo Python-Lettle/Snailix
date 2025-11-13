@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-10 09:58:11
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 13:42:00
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 14:05:04
  * @Copyright: MIT License
  * @Description: 
  */
@@ -10,6 +10,7 @@
 #include <snailix/assert.h>
 #include <snailix/printk.h>
 #include <snailix/syscall.h>
+#include <snailix/task.h>
 
 #define SYSCALL_SIZE 64
 
@@ -34,7 +35,6 @@ static u32 sys_test()
     return 255;
 }
 
-extern void task_yield();
 
 void syscall_init()
 {
@@ -44,5 +44,6 @@ void syscall_init()
     }
 
     syscall_table[SYS_NR_TEST] = sys_test;
+    syscall_table[SYS_NR_SLEEP] = task_sleep;
     syscall_table[SYS_NR_YIELD] = task_yield;
 }
