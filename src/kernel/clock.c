@@ -40,7 +40,7 @@ void clock_handler(int vector)
     {
         task->jiffies = jiffies;
         task->ticks--;
-        // kernel_info("Task %s ticks remaining: %d\n", task->name, task->ticks);
+            // kernel_info("Task %s ticks remaining: %d\n", task->name, task->ticks);
         if (!task->ticks)
         {
             schedule();

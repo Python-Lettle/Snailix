@@ -13,20 +13,24 @@
 
 typedef struct bitmap_t
 {
-    u8 *bits;       // Bitmap buffer
-    u32 capacity;   // Maximum index
-    u32 offset;     // Offset of the first bit
+    u8 *bits;   // bitmap buffer
+    u32 length; // bitmap buffer length
+    u32 offset; // bitmap start offset
 } bitmap_t;
 
-// Initialize the bitmap, allocate memory and set the capacity
-bool bitmap_init(bitmap_t *bitmap, char *buffer, u32 capacity, u32 start);
+// Initialize bitmap
+void bitmap_init(bitmap_t *map, char *bits, u32 length, u32 offset);
 
-// Set the bit at the specified index to 'value'
-int bitmap_set(bitmap_t *bitmap, u32 index, bool value);
+// Construct bitmap
+void bitmap_make(bitmap_t *map, char *bits, u32 length, u32 offset);
 
-// Get the bit at the specified index
-int bitmap_get(bitmap_t *bitmap, u32 index);
-// Free the bitmap memory
-void bitmap_free(bitmap_t *bitmap);
+// Test if a bit in the bitmap is 1
+bool bitmap_test(bitmap_t *map, u32 index);
+
+// Set the value of a bit in the bitmap
+void bitmap_set(bitmap_t *map, u32 index, bool value);
+
+// Get consecutive count bits from the bitmap
+int bitmap_scan(bitmap_t *map, u32 count);
 
 #endif // SNAILIX_BITMAP_H

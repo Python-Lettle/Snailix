@@ -2,6 +2,7 @@ ARCH = x86_64-elf-
 CC = $(ARCH)gcc
 LD = $(ARCH)ld
 OBJCOPY = $(ARCH)objcopy
+NM = $(ARCH)nm
 
 BUILD = ./build
 SRC   = ./src
@@ -33,7 +34,7 @@ LDFLAGS := $(strip ${LDFLAGS})
 
 # QEMU params
 QEMU := qemu-system-i386 \
-	-m 4096M \
+	-m 32M \
 	-rtc base=localtime \
 
 QEMU_DISK := -boot c \
@@ -89,6 +90,11 @@ debug: $(BUILD)/$(KERNEL_NAME).img
 bochs: $(BUILD)/$(KERNEL_NAME).img
 	bochs -q
 
+.PHONY: bochsg
+bochsg: $(BUILD)/$(KERNEL_NAME).img
+	/Library/Java/JavaVirtualMachines/jdk1.8.0_361.jdk/Contents/Home/bin/java -jar ~/Documents/Java/peter-bochs-debugger20140703.jar bochs -q
+
+
 #===========================================================
 # Build rules
 #===========================================================
@@ -100,7 +106,7 @@ $(BUILD)/$(KERNEL_NAME).bin: $(BUILD)/raw.bin
 	$(OBJCOPY) -O binary $< $@
 
 $(BUILD)/$(KERNEL_NAME).map: $(BUILD)/raw.bin
-	nm $< | sort > $@
+	$(NM) $< | sort > $@
 
 $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
@@ -114,7 +120,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	$(CC) $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
-$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin $(BUILD)/$(KERNEL_NAME).bin
+$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin $(BUILD)/$(KERNEL_NAME).bin $(BUILD)/$(KERNEL_NAME).map
 	@dd if=/dev/zero of=$@ bs=1M count=16
 	@dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
 	@dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc

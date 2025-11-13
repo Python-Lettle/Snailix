@@ -183,10 +183,10 @@ read_disk_32:
     mov cl, bl
 
     .read:
-        push cx; 保存 cx
-        call .waits; 等待数据准备完毕
-        call .reads; 读取一个扇区
-        pop cx; 恢复 cx
+        push cx                         ; Save cx
+        call .waits                     ; Wait until data is ready
+        call .reads                     ; Read one sector
+        pop cx                          ; Restore cx
         loop .read
     ret
 

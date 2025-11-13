@@ -12,9 +12,9 @@
 #include <snailix/syscall.h>
 #include <snailix/interrupt.h>
 #include <snailix/assert.h>
+#include <snailix/memory.h>
 
 #define NR_TASKS  64
-#define PAGE_SIZE 0x1000
 
 extern void task_switch(task_t *next);
 
@@ -31,11 +31,38 @@ static task_t *idle_task = (task_t *)0x2000;
 task_t *block_task = (task_t *)0x3000;
 u8 block_time = 0;
 
+// Search for a task with the specified state, except the current running task.
+static task_t *task_search(task_state_t state)
+{
+    assert(!get_interrupt_state());
+    task_t *task = NULL;
+    task_t *current = running_task();
+
+    for (size_t i = 0; i < NR_TASKS; i++)
+    {
+        task_t *ptr = task_table[i];
+        if (ptr == NULL)
+            continue;
+
+        if (ptr->state != state)
+            continue;
+        if (current == ptr)
+            continue;
+        if (task == NULL || task->ticks < ptr->ticks || ptr->jiffies < task->jiffies)
+            task = ptr;
+    }
+
+    return task;
+}
+
 task_t *running_task()
 {
+    task_t *task;
     asm volatile(
-        "movl %esp, %eax\n"
-        "andl $0xfffff000, %eax\n");
+        "movl %%esp, %%eax\n"
+        "andl $0xfffff000, %%eax\n"
+        "movl %%eax, %0" : "=a"(task));
+    return task;
 }
 
 void schedule()
@@ -47,13 +74,9 @@ void schedule()
     task_t *current = running_task();
 
     // Find next ready task, round-robin scheduling.
-    task_t *next = task_table[running_index];
-    while (next->state != TASK_READY)               // We can pick the current task again here.
-    {
-        running_index = (running_index + 1) % task_count;
-        next = task_table[running_index];
-    }
-    running_index = (running_index + 1) % task_count;
+    task_t *next = task_search(TASK_READY);
+
+    assert(next != NULL && next->state == TASK_READY && next->magic == SNAILIX_MAGIC);
 
     if (list_empty(&block_list))
     {
@@ -89,12 +112,25 @@ static task_t *task_create(task_t *task, const char * name, u32 priority, u32 ui
     task->ticks = 150;
     strcpy(task->name, name);
     task->uid = uid;
+    task->pde = 0x1000;  // Set to kernel page directory physical address
+    task->vmap = NULL;   // No user space yet
+    task->brk = 0;
 
     task->magic = SNAILIX_MAGIC;
 
     task_count++;
     return task;
 }
+
+static void task_setup()
+{
+    task_t *task = running_task();
+    task->magic = SNAILIX_MAGIC;
+    task->ticks = 100;
+
+    memset(task_table, 0, sizeof(task_table));
+}
+
 
 void task_block(task_t *task, LinkedList *blist, task_state_t state)
 {

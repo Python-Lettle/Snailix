@@ -57,8 +57,6 @@ void _ofp self_block_thread()
 void _ofp init_thread()
 {
     set_interrupt_state(true);
-
-    char temp[100];
     bool finish = false;
     while(true)
     {
