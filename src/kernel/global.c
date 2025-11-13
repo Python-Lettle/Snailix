@@ -1,14 +1,15 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 10:43:24
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-29 10:49:16
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 10:02:23
  * @Copyright: MIT License
  * @Description: 
  */
 #include <snailix/global.h>
 #include <snailix/string.h>
 #include <snailix/printk.h>
+#include <snailix/debug.h>
 
 descriptor_t gdt[GDT_SIZE]; // Kernel Global Descriptor Table
 pointer_t gdt_ptr;          // Kernel GDT pointer

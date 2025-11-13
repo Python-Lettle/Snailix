@@ -48,6 +48,7 @@ KERNEL_OBJS = $(BUILD)/kernel/start.o \
 			$(BUILD)/kernel/asmfuncs.o \
 			$(BUILD)/kernel/screen.o \
 			$(BUILD)/kernel/printk.o \
+			$(BUILD)/kernel/debug.o \
 			$(BUILD)/kernel/assert.o \
 			$(BUILD)/kernel/memory.o \
 			$(BUILD)/kernel/global.o \

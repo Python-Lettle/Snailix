@@ -1,14 +1,15 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 13:18:32
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 09:57:52
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 10:00:45
  * @Copyright: MIT License
  * @Description: 
  */
 #include <snailix/interrupt.h>
 #include <snailix/global.h>
 #include <snailix/printk.h>
+#include <snailix/debug.h>
 #include <snailix/asmfuncs.h>
 #include <snailix/assert.h>
 

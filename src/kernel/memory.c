@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:55:09
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-03 19:40:11
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 10:00:04
  * @Copyright: MIT License
  * @Description: Initialize the memory management of Snailix with paging support.
  */
@@ -249,7 +249,7 @@ void mapping_init()
     // IMPORTANT: At this point, we are still in real mode - all addresses are physical
     u32 *page_dir = (u32 *)PAGE_DIR_ADDR;
     ASSERT_PAGE((u32)page_dir);
-    printk("[Mem Paging] Page directory located at 0x%x\n", (u32)page_dir);
+    print_prefix("[Mem Paging]","Page directory located at 0x%x\n", (u32)page_dir);
     
     // Clear page directory
     memset(page_dir, 0, PAGE_SIZE);
@@ -257,7 +257,7 @@ void mapping_init()
     // Initialize first page table at safe address
     u32 *page_table1 = (u32 *)PAGE_TABLE1_ADDR;
     ASSERT_PAGE((u32)page_table1);
-    printk("[Mem Paging] First page table located at 0x%x\n", (u32)page_table1);
+    print_prefix("[Mem Paging]","First page table located at 0x%x\n", (u32)page_table1);
     
     // Clear first page table
     memset(page_table1, 0, PAGE_SIZE);
@@ -265,7 +265,7 @@ void mapping_init()
     // Initialize second page table at safe address
     u32 *page_table2 = (u32 *)PAGE_TABLE2_ADDR;
     ASSERT_PAGE((u32)page_table2);
-    printk("[Mem Paging] Second page table located at 0x%x\n", (u32)page_table2);
+    print_prefix("[Mem Paging]","Second page table located at 0x%x\n", (u32)page_table2);
     
     // Clear second page table
     memset(page_table2, 0, PAGE_SIZE);
