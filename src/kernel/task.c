@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 10:02:36
+ * @LastEditTime: 2025-11-13 13:41:40
  * @Copyright: MIT License
  * @Description: 
  */
@@ -29,16 +29,17 @@ static LinkedList block_list;           // Default blocked list
 static task_t *init_task = (task_t *)0x1000;
 // Idle task, do nothing.
 static task_t *idle_task = (task_t *)0x2000;
-task_t *block_task = (task_t *)0x3000;
-u8 block_time = 0;
 
 // Search for a task with the specified state, except the current running task.
 static task_t *task_search(task_state_t state)
 {
+    // Make sure interrupts are disabled
     assert(!get_interrupt_state());
+
     task_t *task = NULL;
     task_t *current = running_task();
 
+    // Search for a task with the specified state
     for (size_t i = 0; i < NR_TASKS; i++)
     {
         task_t *ptr = task_table[i];
@@ -47,8 +48,10 @@ static task_t *task_search(task_state_t state)
 
         if (ptr->state != state)
             continue;
-        if (current == ptr)
-            continue;
+        
+        // If enabled, skip the current running task.
+        // if (current == ptr)
+        //     continue;
         if (task == NULL || task->ticks < ptr->ticks || ptr->jiffies < task->jiffies)
             task = ptr;
     }
@@ -79,18 +82,10 @@ void schedule()
 
     assert(next != NULL && next->state == TASK_READY && next->magic == SNAILIX_MAGIC);
 
-    if (list_empty(&block_list))
-    {
-        block_time = 0;
-    }
-    else
-    {
-        block_time++;
-    }
-
     next->ticks = 150;
     next->state = TASK_RUNNING;
-    current->state = current->state == TASK_BLOCKED ? TASK_BLOCKED : TASK_READY;
+    if (current != next)
+        current->state = current->state == TASK_BLOCKED ? TASK_BLOCKED : TASK_READY;
     printk("[Schedule] Switch task [%s]-> [%s]\n", current->name, next->name);
     task_switch(next);
 }
@@ -169,6 +164,9 @@ void task_unblock(task_t *task)
     if (current == task) schedule();
 }
 
+/**
+ * @brief Yield the current running task.
+ */
 void task_yield()
 {
     schedule();
@@ -184,11 +182,9 @@ void task_init()
 
     task_create(init_task, "init_task", 1, KERNEL_USER, init_thread);
     task_create(idle_task, "idle_task", 5, KERNEL_USER, idle_thread);
-    task_create(block_task, "block_task", 5, KERNEL_USER, self_block_thread);
 
     task_table[0] = init_task;
     task_table[1] = idle_task;
-    task_table[2] = block_task;
 
     schedule();
 }

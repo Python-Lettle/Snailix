@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
- * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-10 19:59:18
+ * @LastEditors: Python-Lettle 1071445082@qq.com
+ * @LastEditTime: 2025-11-13 13:33:11
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -41,9 +41,9 @@ void kernel_main(u32 size, u32 size_high)
 
     keyboard_init();
 
+    syscall_init();
+
     task_init();
 
-    syscall_init();
-    
     set_interrupt_state(true);
 }
