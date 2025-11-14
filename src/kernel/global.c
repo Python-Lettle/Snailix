@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 10:43:24
- * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 10:02:23
+ * @LastEditors: Lettle && 1071445082@qq.com
+ * @LastEditTime: 2025-11-14 14:11:18
  * @Copyright: MIT License
  * @Description: 
  */
@@ -13,6 +13,7 @@
 
 descriptor_t gdt[GDT_SIZE]; // Kernel Global Descriptor Table
 pointer_t gdt_ptr;          // Kernel GDT pointer
+tss_t tss;                  // Task State Segment
 
 void descriptor_init(descriptor_t *desc, u32 base, u32 limit)
 {
@@ -76,4 +77,27 @@ void gdt_init()
     gdt_ptr.limit = sizeof(gdt) - 1;
 
     kernel_info("GDT init done!!!\n");
+}
+
+void tss_init()
+{
+    memset(&tss, 0, sizeof(tss));
+
+    tss.ss0 = KERNEL_DATA_SELECTOR;
+    tss.iobase = sizeof(tss);
+
+    descriptor_t *desc = gdt + KERNEL_TSS_IDX;
+    descriptor_init(desc, (u32)&tss, sizeof(tss) - 1);
+    desc->segment = 0;     // System segment
+    desc->granularity = 0; // Byte granularity
+    desc->big = 0;         // Fixed to 0
+    desc->long_mode = 0;   // Fixed to 0
+    desc->present = 1;     // Present in memory
+    desc->DPL = 0;         // For task gate or call gate
+    desc->type = 0b1001;   // 32-bit available TSS
+
+    asm volatile(
+        "lgdt (%%eax)\n"
+        "ltr %%bx\n"
+        ::"a"(&gdt_ptr), "b"(KERNEL_TSS_SELECTOR) : "memory");
 }
