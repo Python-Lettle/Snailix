@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-03 09:38:17
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-03 10:23:23
+ * @LastEditTime: 2025-11-14 09:28:52
  * @Copyright: MIT License
  * @Description: 
  */
@@ -10,6 +10,9 @@
 #include <snailix/printk.h>
 #include <snailix/assert.h>
 #include <snailix/asmfuncs.h>
+#include <snailix/fifo.h>
+#include <snailix/mutex.h>
+#include <snailix/task.h>
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x64
@@ -220,6 +223,13 @@ static char keymap[][4] = {
     /* 0x5F */ {INV, INV, false, false}, // PrintScreen
 };
 
+static lock_t lock;    // Lock
+static task_t *waiter; // Waiting task for input
+
+#define BUFFER_SIZE 64        // Input buffer size
+static char buf[BUFFER_SIZE]; // Input buffer
+static fifo_t fifo;           // Circular queue
+
 static bool capslock_state; // CapsLock State
 static bool scrlock_state;  // ScreenLock State
 static bool numlock_state;  // NumberLock State
@@ -317,7 +327,41 @@ void keyboard_handler(int vector)
     if (ch == INV)
         return ;
     
-    printk("%c", ch);
+    fifo_put(&fifo, ch);
+    if (waiter != NULL)
+    {
+        task_unblock(waiter);
+        waiter = NULL;
+    }
+}
+
+/**
+ * @brief Read characters from the input buffer
+ * 
+ * @param buf The buffer to store the read characters
+ * @param count The maximum number of characters to read
+ * @return u32 The actual number of characters read
+ */
+u32 keyboard_read(char *buf, u32 count)
+{
+    lock_acquire(&lock);
+
+
+    int nr = 0;
+    while (nr < count)
+    {
+        // Wait for input if the buffer is empty
+        while (fifo_empty(&fifo))
+        {
+            // Block the current task if the buffer is empty, until a character is available.
+            // While the waiter task gets the character, it will be unblocked.
+            waiter = running_task();
+            task_block(waiter, NULL, TASK_WAITING);
+        }
+        buf[nr++] = fifo_get(&fifo);
+    }
+    lock_release(&lock);
+    return count;
 }
 
 void keyboard_init()
@@ -326,6 +370,10 @@ void keyboard_init()
     scrlock_state = false;
     capslock_state = false;
     extcode_state = false;
+
+    fifo_init(&fifo, buf, BUFFER_SIZE);
+    lock_init(&lock);
+    waiter = NULL;
 
     set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler);
     set_interrupt_mask(IRQ_KEYBOARD, true);

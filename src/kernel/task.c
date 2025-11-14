@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
- * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 14:42:51
+ * @LastEditors: Lettle && 1071445082@qq.com
+ * @LastEditTime: 2025-11-14 09:29:52
  * @Copyright: MIT License
  * @Description: 
  */
@@ -107,7 +107,7 @@ void schedule()
     {
         current->state = TASK_READY;
     }
-    printk("[Schedule] Switch task [%s]-> [%s]\n", current->name, next->name);
+    // print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
     task_switch(next);
 }
 
@@ -166,7 +166,7 @@ void task_block(task_t *task, LinkedList *blist, task_state_t state)
 
     task->state = state;
 
-    kernel_info("Task [%s] is blocked!\n", task->name);
+    // kernel_info("Task [%s] is blocked!\n", task->name);
 
     task_t *current = running_task();
     if (current == task) schedule();
@@ -183,7 +183,7 @@ void task_unblock(task_t *task)
 
     task->state = TASK_READY;
 
-    kernel_info("Task [%s] is unblocked!\n", task->name);
+    // kernel_info("Task [%s] is unblocked!\n", task->name);
 
     task_t *current = running_task();
     if (current == task) schedule();
