@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-14 09:29:52
+ * @LastEditTime: 2025-11-15 12:56:51
  * @Copyright: MIT License
  * @Description: 
  */
@@ -15,10 +15,14 @@
 #include <snailix/interrupt.h>
 #include <snailix/assert.h>
 #include <snailix/memory.h>
+#include <snailix/global.h>
+#include <snailix/bitmap.h>
 
 #define NR_TASKS  64
 extern u32 volatile jiffies;
 extern u32 jiffy;
+extern bitmap_t kernel_map;
+extern tss_t tss;
 
 extern void task_switch(task_t *next);
 
@@ -78,6 +82,16 @@ static task_t *task_search(task_state_t state)
     return task;
 }
 
+void task_activate(task_t *task)
+{
+    assert(task->magic == SNAILIX_MAGIC);
+
+    if (task->uid != KERNEL_USER)
+    {
+        tss.esp0 = (u32)task + PAGE_SIZE;
+    }
+}
+
 task_t *running_task()
 {
     task_t *task;
@@ -108,6 +122,7 @@ void schedule()
         current->state = TASK_READY;
     }
     // print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
+    task_activate(next);
     task_switch(next);
 }
 
@@ -268,8 +283,8 @@ void task_init()
     list_init(&block_list);
     list_init(&sleep_list);
 
-    task_create(init_thread, "init_task", 1, KERNEL_USER);
-    idle_task = task_create(idle_thread, "idle_task", 5, KERNEL_USER);
+    task_create(init_thread, "init_task", 5, NORMAL_USER);
+    idle_task = task_create(idle_thread, "idle_task", 1, KERNEL_USER);
     task_create(sleep_thread, "sleep_task", 5, KERNEL_USER);
 
     schedule();

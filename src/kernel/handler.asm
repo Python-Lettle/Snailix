@@ -38,7 +38,7 @@ interrupt_entry:
     ; Call the handler, the pointer is stored in handler_table
     call [handler_table + eax * 4]
 
-; global interrupt_exit
+global interrupt_exit
 interrupt_exit:
     ; After the handler is called, recovery the stack
     add esp, 4

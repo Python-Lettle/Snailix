@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:55:09
- * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 10:00:04
+ * @LastEditors: Lettle && 1071445082@qq.com
+ * @LastEditTime: 2025-11-15 13:22:28
  * @Copyright: MIT License
  * @Description: Initialize the memory management of Snailix with paging support.
  */
@@ -13,6 +13,7 @@
 #include <snailix/assert.h>
 #include <snailix/stdlib.h>
 #include <snailix/string.h>
+#include <snailix/bitmap.h>
 
 // Get addr page index
 #define IDX(addr) ((u32)addr >> 12) 
@@ -20,6 +21,17 @@
 #define PAGE(idx) ((u32)idx << 12)
 // Check if the address is a page boundary
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
+
+static u32 KERNEL_PAGE_TABLE[] = {
+    MEMORY_BASE + 0x2000,
+    MEMORY_BASE + 0x3000,
+};
+
+#define KERNEL_MAP_BITS 0x4000
+
+#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
+
+bitmap_t kernel_map;
 
 static u32 memory_base = 0;
 static u64 memory_size = 0;
@@ -223,21 +235,15 @@ void free_kpage(u32 vaddr, u32 count)
  */
 void mapping_init()
 {
-    // Use safer memory addresses that are less likely to conflict
-    // Place page directory and tables above 1MB (where kernel memory starts)
-    #define PAGE_DIR_ADDR (MEMORY_BASE + 0x1000)    // 0x101000
-    #define PAGE_TABLE1_ADDR (MEMORY_BASE + 0x2000) // 0x102000
-    #define PAGE_TABLE2_ADDR (MEMORY_BASE + 0x3000) // 0x103000
-
     // Get page indices for these addresses - IDX returns physical page number (physical address / PAGE_SIZE)
-    u32 pdir_pfn = PAGE_DIR_ADDR / PAGE_SIZE;  // Physical Frame Number
-    u32 pt1_pfn = PAGE_TABLE1_ADDR / PAGE_SIZE;
-    u32 pt2_pfn = PAGE_TABLE2_ADDR / PAGE_SIZE;
+    u32 pdir_pfn = KERNEL_PAGE_DIR / PAGE_SIZE;  // Physical Frame Number
+    u32 pt1_pfn = KERNEL_PAGE_TABLE[0] / PAGE_SIZE;
+    u32 pt2_pfn = KERNEL_PAGE_TABLE[1] / PAGE_SIZE;
 
     // Get memory map indices for these addresses (virtual memory tracking)
-    u32 pdir_idx = IDX(PAGE_DIR_ADDR);
-    u32 pt1_idx = IDX(PAGE_TABLE1_ADDR);
-    u32 pt2_idx = IDX(PAGE_TABLE2_ADDR);
+    u32 pdir_idx = IDX(KERNEL_PAGE_DIR);
+    u32 pt1_idx = IDX(KERNEL_PAGE_TABLE[0]);
+    u32 pt2_idx = IDX(KERNEL_PAGE_TABLE[1]);
 
     // Mark these pages as used in memory map first
     memory_map[pdir_idx] = 1;
@@ -247,7 +253,7 @@ void mapping_init()
 
     // Initialize page directory at safe address
     // IMPORTANT: At this point, we are still in real mode - all addresses are physical
-    u32 *page_dir = (u32 *)PAGE_DIR_ADDR;
+    u32 *page_dir = (u32 *)KERNEL_PAGE_DIR;
     ASSERT_PAGE((u32)page_dir);
     print_prefix("[Mem Paging]","Page directory located at 0x%x\n", (u32)page_dir);
     
@@ -255,7 +261,7 @@ void mapping_init()
     memset(page_dir, 0, PAGE_SIZE);
 
     // Initialize first page table at safe address
-    u32 *page_table1 = (u32 *)PAGE_TABLE1_ADDR;
+    u32 *page_table1 = (u32 *)KERNEL_PAGE_TABLE[0];
     ASSERT_PAGE((u32)page_table1);
     print_prefix("[Mem Paging]","First page table located at 0x%x\n", (u32)page_table1);
     
@@ -263,7 +269,7 @@ void mapping_init()
     memset(page_table1, 0, PAGE_SIZE);
 
     // Initialize second page table at safe address
-    u32 *page_table2 = (u32 *)PAGE_TABLE2_ADDR;
+    u32 *page_table2 = (u32 *)KERNEL_PAGE_TABLE[1];
     ASSERT_PAGE((u32)page_table2);
     print_prefix("[Mem Paging]","Second page table located at 0x%x\n", (u32)page_table2);
     
@@ -299,7 +305,7 @@ void mapping_init()
 
     // Set CR3 register to point to page directory physical address
     // CR3 must contain the physical address of the page directory, not virtual
-    set_cr3(PAGE_DIR_ADDR);
+    set_cr3(KERNEL_PAGE_DIR);
 
     // Enable paging
     // After this instruction, all memory accesses will use virtual addresses
