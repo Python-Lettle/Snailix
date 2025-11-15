@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-14 13:53:27
+ * @LastEditTime: 2025-11-15 14:47:46
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -13,7 +13,7 @@
 #include <snailix/interrupt.h>
 #include <snailix/syscall.h>
 
-void _ofp idle_thread()
+void idle_thread()
 {
     set_interrupt_state(true);
     while(true)
@@ -27,7 +27,7 @@ void _ofp idle_thread()
     }
 }
 
-void _ofp sleep_thread()
+void sleep_thread()
 {
     set_interrupt_state(true);
     while(true)
@@ -40,24 +40,18 @@ void _ofp sleep_thread()
 
 extern u32 keyboard_read(char *buf, u32 count);
 
-void _ofp init_thread()
+void user_mode_thread()
 {
-    set_interrupt_state(true);
-    bool finish = false;
     char ch;
     while(true)
     {
-        if (!finish)
-        {
-            kernel_info("Init thread's task is finish!\n");
-            finish = true;
-        }
-
-        bool intr = interrupt_disable();
-
-        keyboard_read(&ch, 1);
-        printk("%c", ch);
-
-        set_interrupt_state(intr);
+        sleep(100);
     }
+}
+
+void init_thread()
+{
+    char temp [100];
+    task_to_user_mode(user_mode_thread);
+    // while(true);
 }

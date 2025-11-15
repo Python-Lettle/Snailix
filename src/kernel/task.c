@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 12:56:51
+ * @LastEditTime: 2025-11-15 13:28:57
  * @Copyright: MIT License
  * @Description: 
  */
@@ -148,7 +148,7 @@ static task_t *task_create(target_t target, const char * name, u32 priority, u32
     task->ticks = 150;
     strcpy(task->name, name);
     task->uid = uid;
-    task->pde = 0x1000;  // Set to kernel page directory physical address
+    task->pde = KERNEL_PAGE_DIR;  // Set to kernel page directory physical address
     task->vmap = NULL;   // No user space yet
     task->brk = 0;
 
@@ -156,6 +156,54 @@ static task_t *task_create(target_t target, const char * name, u32 priority, u32
 
     task_count++;
     return task;
+}
+
+void task_to_user_mode(target_t target)
+{
+    task_t *task = running_task();
+
+    // Ensure task's page directory is set to the kernel page directory
+    // which now has user access enabled for the first 16 pages
+    task->pde = KERNEL_PAGE_DIR;
+    
+    // Set CR3 to the kernel page directory
+    // This is necessary to ensure the page table with user access bits is active
+    asm volatile("movl %0, %%cr3" : : "a"(KERNEL_PAGE_DIR));
+
+    u32 addr = (u32)task + PAGE_SIZE;
+
+    addr -= sizeof(intr_frame_t);
+    intr_frame_t *iframe = (intr_frame_t *)(addr);
+
+    iframe->vector = 0x20;
+    iframe->edi = 1;
+    iframe->esi = 2;
+    iframe->ebp = 3;
+    iframe->esp_dummy = 4;
+    iframe->ebx = 5;
+    iframe->edx = 6;
+    iframe->ecx = 7;
+    iframe->eax = 8;
+
+    iframe->gs = 0;
+    iframe->ds = USER_DATA_SELECTOR;
+    iframe->es = USER_DATA_SELECTOR;
+    iframe->fs = USER_DATA_SELECTOR;
+    iframe->ss = USER_DATA_SELECTOR;
+    iframe->cs = USER_CODE_SELECTOR;
+
+    iframe->error = SNAILIX_MAGIC;
+
+    u32 stack3 = alloc_kpage(1); // todo replace to user stack
+
+    iframe->eip = (u32)target;
+    // Set EFLAGS with IF=1 (enable interrupts) and IOPL=0 (no I/O privilege)
+    iframe->eflags = (1 << 9); // IF=1 only, simpler and safer
+    iframe->esp = stack3 + PAGE_SIZE;
+
+    asm volatile(
+        "movl %0, %%esp\n"
+        "jmp interrupt_exit\n" ::"m"(iframe));
 }
 
 static void task_setup()

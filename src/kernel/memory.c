@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:55:09
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 13:22:28
+ * @LastEditTime: 2025-11-15 14:35:20
  * @Copyright: MIT License
  * @Description: Initialize the memory management of Snailix with paging support.
  */
@@ -16,15 +16,17 @@
 #include <snailix/bitmap.h>
 
 // Get addr page index
-#define IDX(addr) ((u32)addr >> 12) 
+#define IDX(addr) ((u32)addr >> 12)
+#define DIDX(addr) (((u32)addr >> 22) & 0x3ff)
+#define TIDX(addr) (((u32)addr >> 12) & 0x3ff)
 // Gets the start position of the page corresponding to the page index idx
 #define PAGE(idx) ((u32)idx << 12)
 // Check if the address is a page boundary
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
 static u32 KERNEL_PAGE_TABLE[] = {
-    MEMORY_BASE + 0x2000,
-    MEMORY_BASE + 0x3000,
+    0x2000,
+    0x3000,
 };
 
 #define KERNEL_MAP_BITS 0x4000
@@ -41,7 +43,7 @@ static u32 free_pages = 0;
 // The start address of the available memory area
 static u32 start_page = 0;
 // Phisical memory array
-static u8 *memory_map = (u8 *) 0x6000;
+static u8 *memory_map;
 // Pages used by the physical memory array
 static u32 memory_map_pages;
 
@@ -65,6 +67,7 @@ void memory_init(u32 memsize_low, u32 memsize_high)
 
 void memory_map_init()
 {
+    memory_map = (u8 *)memory_base;
     kernel_info("Memory map base = 0x%x\n", memory_map);
 
     // Calculate the number of pages used by the memory map
@@ -81,12 +84,59 @@ void memory_map_init()
     start_page = IDX(MEMORY_BASE) + memory_map_pages;
     for (size_t i=0; i<start_page; i++)
     {
-        // Skip page directory and page tables (0x1000, 0x2000, 0x3000) for now
-        // They will be explicitly marked as used in mapping_init
         memory_map[i] = 1;
     }
 
     kernel_info("Total pages = %d, free pages = %d, start_page = %d\n", total_pages, free_pages, start_page);
+
+    u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;
+    bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
+    bitmap_scan(&kernel_map, memory_map_pages);
+}
+
+// Alloc a page of physical memory
+static u32 get_page()
+{
+    for (size_t i = start_page; i < total_pages; i++)
+    {
+        // If the page is not used
+        if (!memory_map[i])
+        {
+            memory_map[i] = 1;
+            free_pages--;
+            assert(free_pages >= 0);
+            u32 page = ((u32)i) << 12;
+            kernel_info("GET page 0x%p\n", page);
+            return page;
+        }
+    }
+    panic("Out of Memory!!!");
+}
+
+// Free a page of physical memory
+static void put_page(u32 addr)
+{
+    ASSERT_PAGE(addr);
+
+    u32 idx = IDX(addr);
+
+    // idx must be in the range of [start_page, total_pages)
+    assert(idx >= start_page && idx < total_pages);
+
+    // The page must be used
+    assert(memory_map[idx] >= 1);
+
+    // Physical reference minus one
+    memory_map[idx]--;
+
+    // If the reference count is 0, then the page is free
+    if (!memory_map[idx])
+    {
+        free_pages++;
+    }
+
+    assert(free_pages > 0 && free_pages < total_pages);
+    kernel_info("PUT page 0x%p\n", addr);
 }
 
 /**
@@ -124,7 +174,7 @@ void entry_init(page_entry_t *entry, u32 page_number, u8 present, u8 write, u8 u
     
     entry->present = present;
     entry->write = write;
-    entry->user = user;
+    entry->user = 1;
     entry->pwt = 0;      // Page write-through disabled
     entry->pcd = 0;      // Cache enabled
     entry->accessed = 0;  // Not accessed yet
@@ -169,66 +219,66 @@ void enable_page()
     );
 }
 
-/**
- * @brief Allocate kernel pages
- * @param count Number of pages to allocate
- * @return Virtual address of the allocated pages
- */
-u32 alloc_kpage(u32 count)
-{
-    if (count == 0 || free_pages < count) {
-        return 0;
-    }
+// /**
+//  * @brief Allocate kernel pages
+//  * @param count Number of pages to allocate
+//  * @return Virtual address of the allocated pages
+//  */
+// u32 alloc_kpage(u32 count)
+// {
+//     if (count == 0 || free_pages < count) {
+//         return 0;
+//     }
 
-    u32 pages_found = 0;
-    u32 start_index = start_page;
+//     u32 pages_found = 0;
+//     u32 start_index = start_page;
 
-    // Find contiguous free pages
-    for (size_t i = start_page; i < total_pages && pages_found < count; i++) {
-        if (memory_map[i] == 0) {
-            if (pages_found == 0) {
-                start_index = i;
-            }
-            pages_found++;
-        } else {
-            pages_found = 0;
-        }
-    }
+//     // Find contiguous free pages
+//     for (size_t i = start_page; i < total_pages && pages_found < count; i++) {
+//         if (memory_map[i] == 0) {
+//             if (pages_found == 0) {
+//                 start_index = i;
+//             }
+//             pages_found++;
+//         } else {
+//             pages_found = 0;
+//         }
+//     }
 
-    if (pages_found < count) {
-        return 0;
-    }
+//     if (pages_found < count) {
+//         return 0;
+//     }
 
-    // Mark pages as used
-    for (size_t i = 0; i < count; i++) {
-        memory_map[start_index + i] = 1;
-    }
+//     // Mark pages as used
+//     for (size_t i = 0; i < count; i++) {
+//         memory_map[start_index + i] = 1;
+//     }
 
-    free_pages -= count;
-    return PAGE(start_index);
-}
+//     free_pages -= count;
+//     return PAGE(start_index);
+// }
 
-/**
- * @brief Free kernel pages
- * @param vaddr Virtual address of the pages to free
- * @param count Number of pages to free
- */
-void free_kpage(u32 vaddr, u32 count)
-{
-    if (vaddr == 0 || count == 0 || IDX(vaddr) < start_page) {
-        return;
-    }
+// /**
+//  * @brief Free kernel pages
+//  * @param vaddr Virtual address of the pages to free
+//  * @param count Number of pages to free
+//  */
+// void free_kpage(u32 vaddr, u32 count)
+// {
+//     if (vaddr == 0 || count == 0 || IDX(vaddr) < start_page) {
+//         return;
+//     }
 
-    u32 start_index = IDX(vaddr);
+//     u32 start_index = IDX(vaddr);
 
-    // Mark pages as free
-    for (size_t i = 0; i < count && (start_index + i) < total_pages; i++) {
-        if (memory_map[start_index + i] == 1) {
-            memory_map[start_index + i] = 0;
-            free_pages++;
-        }
-    }
-}
+//     // Mark pages as free
+//     for (size_t i = 0; i < count && (start_index + i) < total_pages; i++) {
+//         if (memory_map[start_index + i] == 1) {
+//             memory_map[start_index + i] = 0;
+//             free_pages++;
+//         }
+//     }
+// }
 
 /**
  * @brief Initialize memory mapping and enable paging
@@ -292,9 +342,11 @@ void mapping_init()
         // Map each physical page to the same virtual address
         page_entry_t *pte = (page_entry_t *)&page_table1[i];
         // Here i is the physical frame number (since we're mapping 1:1)
-        entry_init(pte, i, 1, 1, 0);  // Present, R/W, Supervisor
-    }
+        // For the first few pages (where user_mode_thread might be located), set user access bit
+        u8 user_access = (i < 16) ? 1 : 0;  // Allow user mode access to first 16 pages (64KB)
+        entry_init(pte, i, 1, 1, user_access);  // Present, R/W, User (for first 16 pages)
 
+    }
     // Map the second 4MB of physical memory to virtual memory (1:1 mapping)
     for (size_t i = 0; i < 1024; i++) {
         page_entry_t *pte = (page_entry_t *)&page_table2[i];
@@ -312,4 +364,68 @@ void mapping_init()
     enable_page();
 }
 
+static page_entry_t *get_pde()
+{
+    return (page_entry_t *)(0xfffff000);
+}
+
+static page_entry_t *get_pte(u32 vaddr)
+{
+    return (page_entry_t *)(0xffc00000 | (DIDX(vaddr) << 12));
+}
+
+// 刷新虚拟地址 vaddr 的 块表 TLB
+static void flush_tlb(u32 vaddr)
+{
+    asm volatile("invlpg (%0)" ::"r"(vaddr)
+                 : "memory");
+}
+
+// 从位图中扫描 count 个连续的页
+static u32 scan_page(bitmap_t *map, u32 count)
+{
+    assert(count > 0);
+    int32 index = bitmap_scan(map, count);
+
+    if (index == EOF)
+    {
+        panic("Scan page fail!!!");
+    }
+
+    u32 addr = PAGE(index);
+    kernel_info("Scan page 0x%p count %d\n", addr, count);
+    return addr;
+}
+
+// 与 scan_page 相对，重置相应的页
+static void reset_page(bitmap_t *map, u32 addr, u32 count)
+{
+    ASSERT_PAGE(addr);
+    assert(count > 0);
+    u32 index = IDX(addr);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        assert(bitmap_test(map, index + i));
+        bitmap_set(map, index + i, 0);
+    }
+}
+
+// 分配 count 个连续的内核页
+u32 alloc_kpage(u32 count)
+{
+    assert(count > 0);
+    u32 vaddr = scan_page(&kernel_map, count);
+    kernel_info("ALLOC kernel pages 0x%p count %d\n", vaddr, count);
+    return vaddr;
+}
+
+// 释放 count 个连续的内核页
+void free_kpage(u32 vaddr, u32 count)
+{
+    ASSERT_PAGE(vaddr);
+    assert(count > 0);
+    reset_page(&kernel_map, vaddr, count);
+    kernel_info("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
 

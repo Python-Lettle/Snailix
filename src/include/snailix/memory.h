@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-03 13:42:21
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 00:01:02
+ * @LastEditTime: 2025-11-15 13:52:56
  * @Copyright: MIT License
  * @Description: 
  */
@@ -15,7 +15,7 @@
 #define MEMORY_BASE 0x100000    // 1M, start of available memory
 
 // Kernel page directory address
-#define KERNEL_PAGE_DIR (MEMORY_BASE + 0x1000)    // 0x101000
+#define KERNEL_PAGE_DIR (0x1000)    // 0x101000
 
 typedef struct page_entry_t
 {
