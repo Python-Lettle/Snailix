@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 00:25:37
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-29 14:25:46
+ * @LastEditTime: 2025-11-16 23:48:03
  * @Copyright: MIT License
  * @Description:
  *      This file is responsible for writing the output to the screen, 
@@ -139,10 +139,11 @@ static void command_del()
  * @param {char*} buf - The string to be printed.
  * @param {u32} count - The length of the string to be printed.
  */
-void screen_print(char *buf, u32 count)
+int32 screen_print(char *buf, u32 count)
 {
     char ch;
-    while (*buf != EOS)
+    int32 nr = 0;
+    while (nr++ < count)
     {
         ch = *buf++;
         switch (ch)
@@ -191,6 +192,7 @@ void screen_print(char *buf, u32 count)
     }
 
     set_cursor();
+    return nr;
 }
 
 /**

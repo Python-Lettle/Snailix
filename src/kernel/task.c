@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 13:28:57
+ * @LastEditTime: 2025-11-17 00:32:37
  * @Copyright: MIT License
  * @Description: 
  */
@@ -59,7 +59,11 @@ static task_t *task_search(task_state_t state)
     task_t *current = running_task();
 
     // Search for a task with the specified state
-    for (size_t i = 0; i < NR_TASKS; i++)
+    static size_t i = 0;        // A global index to make sure all task will be scheduled equally.
+    size_t i_backup = i;
+    // Force i++ to make sure it will not be stucked in 0 forever.
+    i = (i + 1) % NR_TASKS;
+    while ((i = (i+1)%NR_TASKS) != i_backup)
     {
         task_t *ptr = task_table[i];
         if (ptr == NULL)
@@ -69,11 +73,16 @@ static task_t *task_search(task_state_t state)
             continue;
         
         // If enabled, skip the current running task.
-        // if (current == ptr)
-        //     continue;
+        if (current == ptr)
+            continue;
         if (task == NULL || task->ticks < ptr->ticks || ptr->jiffies < task->jiffies)
+        {
             task = ptr;
-    }
+            break;
+        }
+        
+        i = (i + 1) % NR_TASKS;
+    } 
 
     // If no task found, return idle task.
     if (task == NULL)
@@ -121,7 +130,7 @@ void schedule()
     {
         current->state = TASK_READY;
     }
-    // print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
+    print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
     task_activate(next);
     task_switch(next);
 }

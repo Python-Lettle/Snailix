@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 14:47:46
+ * @LastEditTime: 2025-11-17 00:29:05
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -12,6 +12,7 @@
 #include <snailix/stdlib.h>
 #include <snailix/interrupt.h>
 #include <snailix/syscall.h>
+#include <snailix/stdio.h>
 
 void idle_thread()
 {
@@ -45,7 +46,8 @@ void user_mode_thread()
     char ch;
     while(true)
     {
-        sleep(100);
+        printf("Thread is in user mode!\n");
+        sleep(10);
     }
 }
 

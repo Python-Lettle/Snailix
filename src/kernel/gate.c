@@ -1,8 +1,8 @@
 /*
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-10 09:58:11
- * @LastEditors: Python-Lettle 1071445082@qq.com
- * @LastEditTime: 2025-11-13 14:05:04
+ * @LastEditors: Lettle && 1071445082@qq.com
+ * @LastEditTime: 2025-11-16 23:54:04
  * @Copyright: MIT License
  * @Description: 
  */
@@ -35,6 +35,17 @@ static u32 sys_test()
     return 255;
 }
 
+extern int32 screen_print(char *buf, u32 count);
+int32 sys_write(fd_t fd, char *buf, u32 len)
+{
+    if (fd == stdout || fd == stderr)
+    {
+        return screen_print(buf, len);
+    }
+    // todo
+    panic("write!!!!");
+    return 0;
+}
 
 void syscall_init()
 {
@@ -46,4 +57,5 @@ void syscall_init()
     syscall_table[SYS_NR_TEST] = sys_test;
     syscall_table[SYS_NR_SLEEP] = task_sleep;
     syscall_table[SYS_NR_YIELD] = task_yield;
+    syscall_table[SYS_NR_WRITE] = sys_write;
 }

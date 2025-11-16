@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:20:55
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-10-22 23:32:26
+ * @LastEditTime: 2025-11-16 23:45:48
  * @Copyright: MIT License
  * @Description: Contains some standard input and output functions.
  */
@@ -13,5 +13,6 @@
 
 int vsprintf(char *buf, const char *fmt, va_list args);
 int sprintf(char *buf, const char *fmt, ...);
+int printf(const char *fmt, ...);
 
 #endif //SNAILIX_STDIO_H

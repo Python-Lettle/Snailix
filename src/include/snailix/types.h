@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-28 00:13:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-03 13:47:23
+ * @LastEditTime: 2025-11-16 23:46:26
  * @Copyright: MIT License
  * @Description: 
  */
@@ -43,5 +43,13 @@ typedef unsigned long long u64;
 
 typedef u32 time_t;
 typedef u32 idx_t;
+
+typedef int32 fd_t;
+typedef enum std_fd_t
+{
+    stdin,
+    stdout,
+    stderr,
+} std_fd_t;
 
 #endif // SNAILIX_TYPES_H
