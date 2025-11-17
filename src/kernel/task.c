@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-17 00:32:37
+ * @LastEditTime: 2025-11-17 14:03:58
  * @Copyright: MIT License
  * @Description: 
  */
@@ -130,7 +130,7 @@ void schedule()
     {
         current->state = TASK_READY;
     }
-    print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
+    // print_prefix("[Schedule]", "Switch task [%s]-> [%s]\n", current->name, next->name);
     task_activate(next);
     task_switch(next);
 }
@@ -334,6 +334,7 @@ void task_yield()
 extern void idle_thread();
 extern void init_thread();
 extern void sleep_thread();
+extern void test_thread();
 
 void task_init()
 {
@@ -343,6 +344,7 @@ void task_init()
     task_create(init_thread, "init_task", 5, NORMAL_USER);
     idle_task = task_create(idle_thread, "idle_task", 1, KERNEL_USER);
     task_create(sleep_thread, "sleep_task", 5, KERNEL_USER);
+    task_create(test_thread, "test_task", 5, KERNEL_USER);
 
     schedule();
 }

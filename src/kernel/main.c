@@ -2,7 +2,7 @@
  * @Author: Lettle 1071445082@qq.com
  * @Date: 2025-10-28 00:12:03
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-14 14:12:44
+ * @LastEditTime: 2025-11-17 13:47:45
  * @Copyright: MIT License
  * @Description: Kernel main function
  */
@@ -17,6 +17,7 @@ extern void screen_init();
 extern void memory_init(u32 memsize_low, u32 memsize_high);
 extern void memory_map_init();
 extern void mapping_init();
+extern void arena_init();
 extern void gdt_init();
 extern void interrupt_init();
 extern void task_init();
@@ -38,6 +39,7 @@ void kernel_main(u32 size, u32 size_high)
 
     memory_map_init();
     mapping_init();
+    arena_init();
     interrupt_init();
     clock_init();
     time_init();
