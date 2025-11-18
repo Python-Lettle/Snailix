@@ -201,7 +201,7 @@ read_disk_32:
 
     .reads:
         mov dx, 0x1f0
-        mov cx, 256; 一个扇区 256 字
+        mov cx, 256; One sector has 256 words
         .readw:
             in ax, dx
             mov [edi], ax
@@ -213,34 +213,34 @@ read_disk_32:
 ; ==================================================
 ; GDT
 ; ==================================================
-memory_base equ 0; 内存开始的位置：基地址
+memory_base equ 0; Memory start address: base address
 
-; 内存界限 4G / 4K - 1
+; Memory limit 4G / 4K - 1
 memory_limit equ ((1024 * 1024 * 1024 * 4) / (1024 * 4)) - 1
 
 gdt_ptr:
     dw (gdt_end - gdt_base) - 1
     dd gdt_base
 gdt_base:
-    dd 0, 0; NULL 描述符
+    dd 0, 0; NULL descriptor
 gdt_code:
-    dw memory_limit & 0xffff; 段界限 0 ~ 15 位
-    dw memory_base & 0xffff; 基地址 0 ~ 15 位
-    db (memory_base >> 16) & 0xff; 基地址 16 ~ 23 位
-    ; 存在 - dlp 0 - S _ 代码 - 非依从 - 可读 - 没有被访问过
+    dw memory_limit & 0xffff; Segment limit bits 0-15
+    dw memory_base & 0xffff; Base address bits 0-15
+    db (memory_base >> 16) & 0xff; Base address bits 16-23
+    ; Present - DPL 0 - S - Code - Non-conforming - Readable - Not accessed
     db 0b_1_00_1_1_0_1_0;
-    ; 4k - 32 位 - 不是 64 位 - 段界限 16 ~ 19
+    ; 4k - 32-bit - Not 64-bit - Segment limit bits 16-19
     db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf;
-    db (memory_base >> 24) & 0xff; 基地址 24 ~ 31 位
+    db (memory_base >> 24) & 0xff; Base address bits 24-31
 gdt_data:
-    dw memory_limit & 0xffff; 段界限 0 ~ 15 位
-    dw memory_base & 0xffff; 基地址 0 ~ 15 位
-    db (memory_base >> 16) & 0xff; 基地址 16 ~ 23 位
-    ; 存在 - dlp 0 - S _ 数据 - 向上 - 可写 - 没有被访问过
+    dw memory_limit & 0xffff; Segment limit bits 0-15
+    dw memory_base & 0xffff; Base address bits 0-15
+    db (memory_base >> 16) & 0xff; Base address bits 16-23
+    ; Present - DPL 0 - S - Data - Up - Writable - Not accessed
     db 0b_1_00_1_0_0_1_0;
-    ; 4k - 32 位 - 不是 64 位 - 段界限 16 ~ 19
+    ; 4k - 32-bit - Not 64-bit - Segment limit bits 16-19
     db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf;
-    db (memory_base >> 24) & 0xff; 基地址 24 ~ 31 位
+    db (memory_base >> 24) & 0xff; Base address bits 24-31
 gdt_end:
 
 code_selector equ (1 << 3)

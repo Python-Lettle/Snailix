@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-29 13:13:52
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-17 14:03:58
+ * @LastEditTime: 2025-11-18 00:06:22
  * @Copyright: MIT License
  * @Description: 
  */
@@ -17,6 +17,7 @@
 #include <snailix/memory.h>
 #include <snailix/global.h>
 #include <snailix/bitmap.h>
+#include <snailix/arena.h>
 
 #define NR_TASKS  64
 extern u32 volatile jiffies;
@@ -170,6 +171,10 @@ static task_t *task_create(target_t target, const char * name, u32 priority, u32
 void task_to_user_mode(target_t target)
 {
     task_t *task = running_task();
+
+    task->vmap = kmalloc(sizeof(bitmap_t)); // todo kfree
+    void *buf = (void *)alloc_kpage(1);     // todo free_kpage
+    bitmap_init(task->vmap, buf, PAGE_SIZE, KERNEL_MEMORY_SIZE / PAGE_SIZE);
 
     // Ensure task's page directory is set to the kernel page directory
     // which now has user access enabled for the first 16 pages

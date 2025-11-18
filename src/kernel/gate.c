@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-10 09:58:11
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-16 23:54:04
+ * @LastEditTime: 2025-11-18 00:11:08
  * @Copyright: MIT License
  * @Description: 
  */
@@ -11,6 +11,7 @@
 #include <snailix/printk.h>
 #include <snailix/syscall.h>
 #include <snailix/task.h>
+#include <snailix/memory.h>
 
 #define SYSCALL_SIZE 64
 
@@ -31,7 +32,14 @@ static void sys_default()
 
 static u32 sys_test()
 {
-    kernel_info("syscall test...\n");
+    char *ptr;
+
+    link_page(0x1600000);
+
+    ptr = (char *) 0x1600000;
+    ptr[3] = 'T';
+
+    unlink_page(0x1600000);
     return 255;
 }
 

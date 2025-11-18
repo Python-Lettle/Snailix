@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-11-01 10:26:58
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-17 14:01:34
+ * @LastEditTime: 2025-11-18 00:07:34
  * @Copyright: MIT License
  * @Description: Some threads required by the kernel are defined here.
  */
@@ -47,8 +47,9 @@ void user_mode_thread()
     char ch;
     while(true)
     {
+        test();
         // printf("Thread is in user mode!\n");
-        sleep(10);
+        sleep(1000);
     }
 }
 

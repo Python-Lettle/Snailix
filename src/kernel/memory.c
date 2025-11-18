@@ -2,7 +2,7 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:55:09
  * @LastEditors: Lettle && 1071445082@qq.com
- * @LastEditTime: 2025-11-15 14:35:20
+ * @LastEditTime: 2025-11-18 20:10:07
  * @Copyright: MIT License
  * @Description: Initialize the memory management of Snailix with paging support.
  */
@@ -14,6 +14,7 @@
 #include <snailix/stdlib.h>
 #include <snailix/string.h>
 #include <snailix/bitmap.h>
+#include <snailix/task.h>
 
 // Get addr page index
 #define IDX(addr) ((u32)addr >> 12)
@@ -24,14 +25,14 @@
 // Check if the address is a page boundary
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
+#define PDE_MASK 0xFFC00000
+
 static u32 KERNEL_PAGE_TABLE[] = {
     0x2000,
     0x3000,
 };
 
 #define KERNEL_MAP_BITS 0x4000
-
-#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
 
 bitmap_t kernel_map;
 
@@ -105,7 +106,7 @@ static u32 get_page()
             memory_map[i] = 1;
             free_pages--;
             assert(free_pages >= 0);
-            u32 page = ((u32)i) << 12;
+            u32 page = PAGE(i);
             kernel_info("GET page 0x%p\n", page);
             return page;
         }
@@ -167,29 +168,13 @@ void set_cr3(u32 pde)
  * @param write Write permission flag
  * @param user User access flag
  */
-void entry_init(page_entry_t *entry, u32 page_number, u8 present, u8 write, u8 user)
+void entry_init(page_entry_t *entry, u32 index)
 {
-    // Zero out the entire entry to clear any existing flags
-    memset(entry, 0, sizeof(page_entry_t));
-    
-    entry->present = present;
-    entry->write = write;
+    *(u32 *)entry = 0;
+    entry->present = 1;
+    entry->write = 1;
     entry->user = 1;
-    entry->pwt = 0;      // Page write-through disabled
-    entry->pcd = 0;      // Cache enabled
-    entry->accessed = 0;  // Not accessed yet
-    entry->dirty = 0;    // Not dirty yet
-    entry->pat = 0;      // Default page attribute
-    entry->global = 1;   // Global pages for kernel - won't be flushed from TLB
-    entry->ignored = 0;  // Reserved bits
-    
-    // For kernel pages, we set the global bit to 1
-    // This means these pages won't be flushed from the TLB on task switches
-    // which improves performance
-    
-    // The index field holds the physical page number (page frame number)
-    // This is the physical address divided by PAGE_SIZE (4KB)
-    entry->index = page_number;
+    entry->index = index;
 }
 
 /**
@@ -219,148 +204,43 @@ void enable_page()
     );
 }
 
-// /**
-//  * @brief Allocate kernel pages
-//  * @param count Number of pages to allocate
-//  * @return Virtual address of the allocated pages
-//  */
-// u32 alloc_kpage(u32 count)
-// {
-//     if (count == 0 || free_pages < count) {
-//         return 0;
-//     }
-
-//     u32 pages_found = 0;
-//     u32 start_index = start_page;
-
-//     // Find contiguous free pages
-//     for (size_t i = start_page; i < total_pages && pages_found < count; i++) {
-//         if (memory_map[i] == 0) {
-//             if (pages_found == 0) {
-//                 start_index = i;
-//             }
-//             pages_found++;
-//         } else {
-//             pages_found = 0;
-//         }
-//     }
-
-//     if (pages_found < count) {
-//         return 0;
-//     }
-
-//     // Mark pages as used
-//     for (size_t i = 0; i < count; i++) {
-//         memory_map[start_index + i] = 1;
-//     }
-
-//     free_pages -= count;
-//     return PAGE(start_index);
-// }
-
-// /**
-//  * @brief Free kernel pages
-//  * @param vaddr Virtual address of the pages to free
-//  * @param count Number of pages to free
-//  */
-// void free_kpage(u32 vaddr, u32 count)
-// {
-//     if (vaddr == 0 || count == 0 || IDX(vaddr) < start_page) {
-//         return;
-//     }
-
-//     u32 start_index = IDX(vaddr);
-
-//     // Mark pages as free
-//     for (size_t i = 0; i < count && (start_index + i) < total_pages; i++) {
-//         if (memory_map[start_index + i] == 1) {
-//             memory_map[start_index + i] = 0;
-//             free_pages++;
-//         }
-//     }
-// }
-
 /**
  * @brief Initialize memory mapping and enable paging
  */
 void mapping_init()
 {
-    // Get page indices for these addresses - IDX returns physical page number (physical address / PAGE_SIZE)
-    u32 pdir_pfn = KERNEL_PAGE_DIR / PAGE_SIZE;  // Physical Frame Number
-    u32 pt1_pfn = KERNEL_PAGE_TABLE[0] / PAGE_SIZE;
-    u32 pt2_pfn = KERNEL_PAGE_TABLE[1] / PAGE_SIZE;
+    page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
+    memset(pde, 0, PAGE_SIZE);
 
-    // Get memory map indices for these addresses (virtual memory tracking)
-    u32 pdir_idx = IDX(KERNEL_PAGE_DIR);
-    u32 pt1_idx = IDX(KERNEL_PAGE_TABLE[0]);
-    u32 pt2_idx = IDX(KERNEL_PAGE_TABLE[1]);
+    idx_t index = 0;
 
-    // Mark these pages as used in memory map first
-    memory_map[pdir_idx] = 1;
-    memory_map[pt1_idx] = 1;
-    memory_map[pt2_idx] = 1;
-    free_pages -= 3;
+    for (idx_t didx = 0; didx < (sizeof(KERNEL_PAGE_TABLE) / 4); didx++)
+    {
+        page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_TABLE[didx];
+        memset(pte, 0, PAGE_SIZE);
 
-    // Initialize page directory at safe address
-    // IMPORTANT: At this point, we are still in real mode - all addresses are physical
-    u32 *page_dir = (u32 *)KERNEL_PAGE_DIR;
-    ASSERT_PAGE((u32)page_dir);
-    print_prefix("[Mem Paging]","Page directory located at 0x%x\n", (u32)page_dir);
-    
-    // Clear page directory
-    memset(page_dir, 0, PAGE_SIZE);
+        page_entry_t *dentry = &pde[didx];
+        entry_init(dentry, IDX((u32)pte));
 
-    // Initialize first page table at safe address
-    u32 *page_table1 = (u32 *)KERNEL_PAGE_TABLE[0];
-    ASSERT_PAGE((u32)page_table1);
-    print_prefix("[Mem Paging]","First page table located at 0x%x\n", (u32)page_table1);
-    
-    // Clear first page table
-    memset(page_table1, 0, PAGE_SIZE);
+        for (idx_t tidx = 0; tidx < 1024; tidx++, index++)
+        {
+            // Page 0 is not mapped to trigger a page fault on null-pointer access for easier debugging
+            if (index == 0)
+                continue;
 
-    // Initialize second page table at safe address
-    u32 *page_table2 = (u32 *)KERNEL_PAGE_TABLE[1];
-    ASSERT_PAGE((u32)page_table2);
-    print_prefix("[Mem Paging]","Second page table located at 0x%x\n", (u32)page_table2);
-    
-    // Clear second page table
-    memset(page_table2, 0, PAGE_SIZE);
-
-    // Set up page directory entries
-    // For page directory entries, we need to store the physical page number of the page table
-    page_entry_t *pde0 = (page_entry_t *)&page_dir[0];
-    // Use actual physical page frame number for the page table
-    entry_init(pde0, pt1_pfn, 1, 1, 0);  // Present, R/W, Supervisor
-
-    // Set up page directory entry for the next 4MB
-    page_entry_t *pde1 = (page_entry_t *)&page_dir[1];
-    entry_init(pde1, pt2_pfn, 1, 1, 0);  // Present, R/W, Supervisor
-
-    // Map the first 4MB of physical memory to virtual memory (1:1 mapping)
-    // This is crucial for the kernel to continue executing after paging is enabled
-    for (size_t i = 0; i < 1024; i++) {
-        // Map each physical page to the same virtual address
-        page_entry_t *pte = (page_entry_t *)&page_table1[i];
-        // Here i is the physical frame number (since we're mapping 1:1)
-        // For the first few pages (where user_mode_thread might be located), set user access bit
-        u8 user_access = (i < 16) ? 1 : 0;  // Allow user mode access to first 16 pages (64KB)
-        entry_init(pte, i, 1, 1, user_access);  // Present, R/W, User (for first 16 pages)
-
-    }
-    // Map the second 4MB of physical memory to virtual memory (1:1 mapping)
-    for (size_t i = 0; i < 1024; i++) {
-        page_entry_t *pte = (page_entry_t *)&page_table2[i];
-        // Physical frame number is i + 1024 (next 4MB)
-        entry_init(pte, i + 1024, 1, 1, 0);  // Present, R/W, Supervisor
+            page_entry_t *tentry = &pte[tidx];
+            entry_init(tentry, index);
+            memory_map[index] = 1; // Mark this page as used in the physical memory map
+        }
     }
 
+    // Map the last page table entry to the page directory itself for convenient modification
+    page_entry_t *entry = &pde[1023];
+    entry_init(entry, IDX(KERNEL_PAGE_DIR));
 
-    // Set CR3 register to point to page directory physical address
-    // CR3 must contain the physical address of the page directory, not virtual
-    set_cr3(KERNEL_PAGE_DIR);
+    // Set the CR3 register
+    set_cr3((u32)pde);
 
-    // Enable paging
-    // After this instruction, all memory accesses will use virtual addresses
     enable_page();
 }
 
@@ -369,19 +249,35 @@ static page_entry_t *get_pde()
     return (page_entry_t *)(0xfffff000);
 }
 
-static page_entry_t *get_pte(u32 vaddr)
+static page_entry_t *get_pte(u32 vaddr, bool create)
 {
-    return (page_entry_t *)(0xffc00000 | (DIDX(vaddr) << 12));
+    page_entry_t *pde = get_pde();
+    u32 idx = DIDX(vaddr);
+    page_entry_t *entry = &pde[idx];
+
+    assert(create || (!create && entry->present));
+
+    page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));
+
+    if (!entry->present)
+    {
+        kernel_info("Get and create page table entry for 0x%p\n", vaddr);
+        u32 page = get_page();
+        entry_init(entry, IDX(page));
+        memset(table, 0, PAGE_SIZE);
+    }
+
+    return table;
 }
 
-// 刷新虚拟地址 vaddr 的 块表 TLB
+// Flush the TLB entry for virtual address vaddr
 static void flush_tlb(u32 vaddr)
 {
     asm volatile("invlpg (%0)" ::"r"(vaddr)
                  : "memory");
 }
 
-// 从位图中扫描 count 个连续的页
+// Scan count consecutive pages in the bitmap and return the first free page address
 static u32 scan_page(bitmap_t *map, u32 count)
 {
     assert(count > 0);
@@ -397,7 +293,7 @@ static u32 scan_page(bitmap_t *map, u32 count)
     return addr;
 }
 
-// 与 scan_page 相对，重置相应的页
+// Reset count consecutive pages in the bitmap starting from addr to 0
 static void reset_page(bitmap_t *map, u32 addr, u32 count)
 {
     ASSERT_PAGE(addr);
@@ -411,7 +307,7 @@ static void reset_page(bitmap_t *map, u32 addr, u32 count)
     }
 }
 
-// 分配 count 个连续的内核页
+// Allocate count consecutive kernel pages
 u32 alloc_kpage(u32 count)
 {
     assert(count > 0);
@@ -420,12 +316,72 @@ u32 alloc_kpage(u32 count)
     return vaddr;
 }
 
-// 释放 count 个连续的内核页
+// Free count consecutive kernel pages
 void free_kpage(u32 vaddr, u32 count)
 {
     ASSERT_PAGE(vaddr);
     assert(count > 0);
     reset_page(&kernel_map, vaddr, count);
     kernel_info("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
+
+void link_page(u32 vaddr)
+{
+    ASSERT_PAGE(vaddr);
+
+    page_entry_t *pte = get_pte(vaddr, true);
+    page_entry_t *entry = &pte[TIDX(vaddr)];
+
+    task_t *task = running_task();
+    bitmap_t *map = task->vmap;
+    u32 index = IDX(vaddr);
+
+    // If the page is already linked, do nothing
+    if (entry->present)
+    {
+        assert(bitmap_test(map, index));
+        return;
+    }
+
+    assert(!bitmap_test(map, index));
+    bitmap_set(map, index, true);
+
+    u32 paddr = get_page();
+    entry_init(entry, IDX(paddr));
+    flush_tlb(vaddr);
+
+    kernel_info("LINK from 0x%p to 0x%p\n", vaddr, paddr);
+}
+
+void unlink_page(u32 vaddr)
+{
+    ASSERT_PAGE(vaddr);
+
+    page_entry_t *pte = get_pte(vaddr, true);
+    page_entry_t *entry = &pte[TIDX(vaddr)];
+
+    task_t *task = running_task();
+    bitmap_t *map = task->vmap;
+    u32 index = IDX(vaddr);
+
+    if (!entry->present)
+    {
+        assert(!bitmap_test(map, index));
+        return;
+    }
+
+    assert(entry->present && bitmap_test(map, index));
+
+    entry->present = false;
+    bitmap_set(map, index, false);
+
+    u32 paddr = PAGE(entry->index);
+
+    kernel_info("UNLINK from 0x%p to 0x%p\n", vaddr, paddr);
+    if (memory_map[entry->index] == 1)
+    {
+        put_page(paddr);
+    }
+    flush_tlb(vaddr);
 }
 
