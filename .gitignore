@@ -1,0 +1,9 @@
+build
+
+.vscode
+.trae
+
+ignoreDir
+.DS_Store
+
+peter-bochs.*
