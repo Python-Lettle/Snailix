@@ -98,7 +98,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	$(CC) $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
-$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin 
+$(BUILD)/$(KERNEL_NAME).img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin
 	@dd if=/dev/zero of=$@ bs=1M count=16
 	@dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
-
+	@dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
