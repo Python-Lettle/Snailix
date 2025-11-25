@@ -46,6 +46,7 @@ QEMU_DEBUG := -s -S
 KERNEL_OBJS = $(BUILD)/kernel/start.o \
 	$(BUILD)/kernel/main.o \
 	$(BUILD)/kernel/io.o \
+	$(BUILD)/kernel/string.o \
 	
 
 #===========================================================
