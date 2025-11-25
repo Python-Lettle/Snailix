@@ -111,10 +111,6 @@ protected_mode:
     ; Param2: ecx = Magic number of the kernel
     mov ecx, 0x22CAFE33
 
-    ; We have no kernel now, so we just halt the CPU.
-    hlt
-    jmp $
-
     jmp dword code_selector:0x10000
 
     ; If this code is reached, an error occurred.
