@@ -1,4 +1,4 @@
-ARCH = x86_64-elf-
+ARCH = 
 CC = $(ARCH)gcc
 LD = $(ARCH)ld
 OBJCOPY = $(ARCH)objcopy
@@ -46,8 +46,11 @@ QEMU_DEBUG := -s -S
 KERNEL_OBJS = $(BUILD)/kernel/start.o \
 	$(BUILD)/kernel/main.o \
 	$(BUILD)/kernel/io.o \
+	$(BUILD)/kernel/assert.o \
 	$(BUILD)/kernel/screen.o \
+	$(BUILD)/kernel/printk.o \
 	$(BUILD)/lib/string.o \
+	$(BUILD)/lib/vsprintf.o \
 	
 
 #===========================================================

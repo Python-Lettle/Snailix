@@ -24,8 +24,8 @@ $ make run
 
 ### Basic
 
-- [ ] Boot & Loader
-- [ ] Screen (80x25 text mode)
+- [x] Boot & Loader
+- [x] Screen (80x25 text mode)
 - [ ] Interrupt
 - [ ] System call
 - [ ] Clock
