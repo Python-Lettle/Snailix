@@ -2,10 +2,11 @@
  * @Author: Lettle && 1071445082@qq.com
  * @Date: 2025-10-22 23:47:22
  * @LastEditors: Lettle 1071445082@qq.com
- * @LastEditTime: 2025-12-23 13:14:43
+ * @LastEditTime: 2025-12-25 11:12:17
  * @Copyright: MIT License
  * @Description: 
  */
+#include <snailix/printk.h>
 #include <snailix/stdarg.h>
 #include <snailix/stdio.h>
 #include <snailix/types.h>
@@ -35,6 +36,8 @@ int printk(const char *fmt, ...)
 
 int kernel_info(const char *fmt, ...)
 {
+    if (!KERNEL_INFO_ON) return 0;
+
     va_list args;
     int i;
 
